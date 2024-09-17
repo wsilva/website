@@ -3,9 +3,10 @@ layout: blog
 title: 'Increasing the security bar in Ingress-NGINX v1.2.0'
 date: 2022-04-28
 slug: ingress-nginx-1-2-0
+author: >
+   Ricardo Katz (VMware),
+   James Strong (Chainguard)
 ---
-
-**Authors:** Ricardo Katz (VMware), James Strong (Chainguard)
 
 The [Ingress](/docs/concepts/services-networking/ingress/) may be one of the most targeted components
 of Kubernetes. An Ingress typically defines an HTTP reverse proxy, exposed to the Internet, containing
@@ -42,7 +43,7 @@ controller container.
 
 While this is not strictly true, to understand what was done here, it's good to understand how
 Linux containers (and underlying mechanisms such as kernel namespaces) work.
-You can read about cgroups in the Kubernetes glossary: [`cgroup`](https://kubernetes.io/docs/reference/glossary/?fundamental=true#term-cgroup) and learn more about cgroups interact with namespaces in the NGINX project article
+You can read about cgroups in the Kubernetes glossary: [`cgroup`](/docs/reference/glossary/?fundamental=true#term-cgroup) and learn more about cgroups interact with namespaces in the NGINX project article
 [What Are Namespaces and cgroups, and How Do They Work?](https://www.nginx.com/blog/what-are-namespaces-cgroups-how-do-they-work/).
 (As you read that, bear in mind that Linux kernel namespaces are a different thing from
 [Kubernetes namespaces](/docs/concepts/overview/working-with-objects/namespaces/)).

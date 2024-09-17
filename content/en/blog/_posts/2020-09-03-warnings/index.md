@@ -4,9 +4,9 @@ title: "Warning: Helpful Warnings Ahead"
 date: 2020-09-03
 slug: warnings
 evergreen: true
+author: >
+   [Jordan Liggitt](https://github.com/liggitt) (Google)
 ---
-
-**Author**: [Jordan Liggitt](https://github.com/liggitt) (Google)
 
 As Kubernetes maintainers, we're always looking for ways to improve usability while preserving compatibility.
 As we develop features, triage bugs, and answer support questions, we accumulate information that would be helpful for Kubernetes users to know.
@@ -63,7 +63,7 @@ This metric has labels for the API `group`, `version`, `resource`, and `subresou
 and a `removed_release` label that indicates the Kubernetes release in which the API will no longer be served.
 
 This is an example query using `kubectl`, [prom2json](https://github.com/prometheus/prom2json),
-and [jq](https://stedolan.github.io/jq/) to determine which deprecated APIs have been requested
+and [jq](https://jqlang.github.io/jq/) to determine which deprecated APIs have been requested
 from the current instance of the API server:
 
 ```sh

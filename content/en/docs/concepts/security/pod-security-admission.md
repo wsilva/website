@@ -121,9 +121,20 @@ current policy level:
 - Any metadata updates **except** changes to the seccomp or AppArmor annotations:
   - `seccomp.security.alpha.kubernetes.io/pod` (deprecated)
   - `container.seccomp.security.alpha.kubernetes.io/*` (deprecated)
-  - `container.apparmor.security.beta.kubernetes.io/*`
+  - `container.apparmor.security.beta.kubernetes.io/*` (deprecated)
 - Valid updates to `.spec.activeDeadlineSeconds`
 - Valid updates to `.spec.tolerations`
+
+## Metrics
+
+Here are the Prometheus metrics exposed by kube-apiserver:
+
+- `pod_security_errors_total`: This metric indicates the number of errors preventing normal evaluation.
+  Non-fatal errors may result in the latest restricted profile being used for enforcement.
+- `pod_security_evaluations_total`: This metric indicates the number of policy evaluations that have occurred,
+  not counting ignored or exempt requests during exporting.
+- `pod_security_exemptions_total`: This metric indicates the number of exempt requests, not counting ignored
+  or out of scope requests.
 
 ## {{% heading "whatsnext" %}}
 

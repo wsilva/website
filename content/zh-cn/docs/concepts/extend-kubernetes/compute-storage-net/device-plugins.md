@@ -18,9 +18,8 @@ weight: 20
 {{< feature-state for_k8s_version="v1.26" state="stable" >}}
 
 <!--
-Kubernetes provides a [device plugin framework](https://git.k8s.io/design-proposals-archive/resource-management/device-plugin.md)
-that you can use to advertise system hardware resources to the
-{{< glossary_tooltip term_id="kubelet" >}}.
+Kubernetes provides a device plugin framework that you can use to advertise system hardware
+resources to the {{< glossary_tooltip term_id="kubelet" >}}.
 
 Instead of customizing the code for Kubernetes itself, vendors can implement a
 device plugin that you deploy either manually or as a {{< glossary_tooltip term_id="daemonset" >}}.
@@ -28,9 +27,8 @@ The targeted devices include GPUs, high-performance NICs, FPGAs, InfiniBand adap
 and other similar computing resources that may require vendor specific initialization
 and setup.
 -->
-Kubernetes 提供了一个
-[设备插件框架](https://git.k8s.io/design-proposals-archive/resource-management/device-plugin.md)，
-你可以用它来将系统硬件资源发布到 {{< glossary_tooltip term_id="kubelet" >}}。
+Kubernetes 提供了一个设备插件框架，你可以用它来将系统硬件资源发布到
+{{< glossary_tooltip term_id="kubelet" >}}。
 
 供应商可以实现设备插件，由你手动部署或作为 {{< glossary_tooltip term_id="daemonset" >}}
 来部署，而不必定制 Kubernetes 本身的代码。目标设备包括 GPU、高性能 NIC、FPGA、
@@ -74,7 +72,7 @@ to advertise that the node has 2 "Foo" devices installed and available.
 -->
 设备插件可以通过此 gRPC 服务在 kubelet 进行注册。在注册期间，设备插件需要发送下面几样内容：
 
-* 设备插件的 Unix 套接字。
+* 设备插件的 UNIX 套接字。
 * 设备插件的 API 版本。
 * `ResourceName` 是需要公布的。这里 `ResourceName`
   需要遵循[扩展资源命名方案](/zh-cn/docs/concepts/configuration/manage-resources-containers/#extended-resources)，
@@ -115,6 +113,15 @@ on certain nodes. Here is an example of a pod requesting this resource to run a 
 假设 Kubernetes 集群正在运行一个设备插件，该插件在一些节点上公布的资源为 `hardware-vendor.example/foo`。
 下面就是一个 Pod 示例，请求此资源以运行一个工作负载的示例：
 
+<!--
+#
+# This Pod needs 2 of the hardware-vendor.example/foo devices
+# and can only schedule onto a Node that's able to satisfy
+# that need.
+#
+# If the Node has more than 2 of those devices available, the
+# remainder would be available for other Pods to use.
+-->
 ```yaml
 ---
 apiVersion: v1
@@ -129,7 +136,7 @@ spec:
         limits:
           hardware-vendor.example/foo: 2
 #
-# 这个 pod 需要两个 hardware-vendor.example/foo 设备
+# 这个 Pod 需要两个 hardware-vendor.example/foo 设备
 # 而且只能够调度到满足需求的节点上
 #
 # 如果该节点中有 2 个以上的设备可用，其余的可供其他 Pod 使用
@@ -230,8 +237,8 @@ The general workflow of a device plugin includes the following steps:
 1. The plugin registers itself with the kubelet through the Unix socket at host
    path `/var/lib/kubelet/device-plugins/kubelet.sock`.
 -->
-3. 插件通过位于主机路径 `/var/lib/kubelet/device-plugins/kubelet.sock` 下的 UNIX 套接字
-   向 kubelet 注册自身。
+3. 插件通过位于主机路径 `/var/lib/kubelet/device-plugins/kubelet.sock` 下的 UNIX
+   套接字向 kubelet 注册自身。
 
    {{< note >}}
    <!--
@@ -256,6 +263,42 @@ The general workflow of a device plugin includes the following steps:
    如果操作成功，则设备插件将返回 `AllocateResponse`，其中包含用于访问被分配的设备容器运行时的配置。
    kubelet 将此信息传递到容器运行时。
 
+   <!--
+   An `AllocateResponse` contains zero or more `ContainerAllocateResponse` objects. In these, the
+   device plugin defines modifications that must be made to a container's definition to provide
+   access to the device. These modifications include:
+   -->
+   `AllocateResponse` 包含零个或多个 `ContainerAllocateResponse` 对象。
+   设备插件在这些对象中给出为了访问设备而必须对容器定义所进行的修改。
+   这些修改包括：
+
+   <!--
+   * [Annotations](/docs/concepts/overview/working-with-objects/annotations/)
+   * device nodes
+   * environment variables
+   * mounts
+   * fully-qualified CDI device names
+   -->
+   * [注解](/zh-cn/docs/concepts/overview/working-with-objects/annotations/)
+   * 设备节点
+   * 环境变量
+   * 挂载点
+   * 完全限定的 CDI 设备名称
+
+   {{< note >}}
+   <!--
+   The processing of the fully-qualified CDI device names by the Device Manager requires
+   that the `DevicePluginCDIDevices` [feature gate](/docs/reference/command-line-tools-reference/feature-gates/)
+   is enabled for both the kubelet and the kube-apiserver. This was added as an alpha feature in Kubernetes
+   v1.28, graduated to beta in v1.29 and to GA in v1.31.
+   -->
+   设备管理器处理完全限定的 CDI 设备名称时，
+   需要为 kubelet 和 kube-apiserver 启用 `DevicePluginCDIDevices`
+   [特性门控](/zh-cn/docs/reference/command-line-tools-reference/feature-gates/)。
+   在 Kubernetes v1.28 版本中作为 Alpha 特性被加入，在 v1.29 版本中升级为 Beta 特性并在
+   v1.31 版本升级为稳定可用特性。
+   {{< /note >}}
+
 <!--
 ### Handling kubelet restarts
 
@@ -267,8 +310,65 @@ of its Unix socket and re-register itself upon such an event.
 ### 处理 kubelet 重启   {#handling-kubelet-restarts}
 
 设备插件应能监测到 kubelet 重启，并且向新的 kubelet 实例来重新注册自己。
-新的 kubelet 实例启动时会删除 `/var/lib/kubelet/device-plugins` 下所有已经存在的 Unix 套接字。
-设备插件需要能够监控到它的 Unix 套接字被删除，并且当发生此类事件时重新注册自己。
+新的 kubelet 实例启动时会删除 `/var/lib/kubelet/device-plugins` 下所有已经存在的 UNIX 套接字。
+设备插件需要能够监控到它的 UNIX 套接字被删除，并且当发生此类事件时重新注册自己。
+
+<!--
+### Device plugin and unhealthy devices
+
+There are cases when devices fail or are shut down. The responsibility of the Device Plugin
+in this case is to notify the kubelet about the situation using the `ListAndWatchResponse` API.
+-->
+### 设备插件和不健康的设备
+
+有时会发生设备出现故障或者被关闭的情况，这时，设备插件的职责是使用
+`ListAndWatch Response` API 将相关情况通报给 kubelet。
+
+<!--
+Once a device is marked as unhealthy, the kubelet will decrease the allocatable count
+for this resource on the Node to reflect how many devices can be used for scheduling new pods.
+Capacity count for the resource will not change.
+-->
+一旦设备被标记为不健康，kubelet 将减少节点上此资源的可分配数量，
+以反映有多少设备可用于调度新的 Pod，资源的容量数量不会因此发生改变。
+
+<!--
+Pods that were assigned to the failed devices will continue be assigned to this device.
+It is typical that code relying on the device will start failing and Pod may get
+into Failed phase if `restartPolicy` for the Pod was not `Always` or enter the crash loop
+otherwise.
+-->
+分配给故障设备的 Pod 将继续分配给该设备。
+通常情况下，依赖于设备的代码将开始失败，如果 Pod 的 `restartPolicy` 不是
+`Always`，则 Pod 可能会进入 Failed 阶段，否则会进入崩溃循环。
+
+<!--
+Before Kubernetes v1.31, the way to know whether or not a Pod is associated with the
+failed device is to use the [PodResources API](#monitoring-device-plugin-resources).
+-->
+在 Kubernetes v1.31 之前，要知道 Pod 是否与故障设备关联，
+可以使用 [PodResources API](#monitoring-device-plugin-resources)。
+
+{{< feature-state feature_gate_name="ResourceHealthStatus" >}}
+
+<!--
+By enabling the feature gate `ResourceHealthStatus`, the field `allocatedResourcesStatus`
+will be added to each container status, within the `.status` for each Pod. The `allocatedResourcesStatus`
+field
+reports health information for each device assigned to the container.
+-->
+通过启用特性门控 `ResourceHealthStatus`，系统将在每个 Pod 的
+`.status` 字段中的每个容器状态内添加 `allocatedResourcesStatus` 字段，
+`allocatedResourcesStatus` 字段报告分配给容器的每个设备的健康信息。
+
+<!--
+For a failed Pod, or or where you suspect a fault, you can use this status to understand whether
+the Pod behavior may be associated with device failure. For example, if an accelerator is reporting
+an over-temperature event, the `allocatedResourcesStatus` field may be able to report this.
+-->
+对于发生故障的 Pod，或者你怀疑存在故障的情况，你可以使用此状态来了解
+Pod 行为是否可能与设备故障有关。例如，如果加速器报告过热事件，
+则 `allocatedResourcesStatus` 字段可能能够报告此情况。
 
 <!--
 ## Device plugin deployment
@@ -285,7 +385,7 @@ in the plugin's [PodSpec](/docs/reference/generated/kubernetes-api/{{< param "ve
 If you choose the DaemonSet approach you can rely on Kubernetes to: place the device plugin's
 Pod onto Nodes, to restart the daemon Pod after failure, and to help automate upgrades.
 -->
-## 设备插件部署   {#device-plugin-depoloyments}
+## 设备插件部署   {#device-plugin-deployment}
 
 你可以将你的设备插件作为节点操作系统的软件包来部署、作为 DaemonSet 来部署或者手动部署。
 
@@ -310,7 +410,7 @@ guaranteed to be non-breaking.
 -->
 ## API 兼容性   {#api-compatibility}
 
-之前版本控制方案要求设备插件的 API 版本与 Kubelet 的版本完全匹配。
+之前版本控制方案要求设备插件的 API 版本与 kubelet 的版本完全匹配。
 自从此特性在 v1.12 中进阶为 Beta 后，这不再是硬性要求。
 API 是版本化的，并且自此特性进阶 Beta 后一直表现稳定。
 因此，kubelet 升级应该是无缝的，但在稳定之前 API 仍然可能会有变更，还不能保证升级不会中断。
@@ -352,7 +452,7 @@ of the device allocations during the upgrade.
 -->
 ## 监控设备插件资源   {#monitoring-device-plugin-resources}
 
-{{< feature-state for_k8s_version="v1.15" state="beta" >}}
+{{< feature-state for_k8s_version="v1.28" state="stable" >}}
 
 <!--
 In order to monitor resources provided by device plugins, monitoring agents need to be able to
@@ -365,7 +465,7 @@ identifying containers using `pod`, `namespace`, and `container` prometheus labe
 为了监控设备插件提供的资源，监控代理程序需要能够发现节点上正在使用的设备，
 并获取元数据来描述哪个指标与容器相关联。
 设备监控代理暴露给 [Prometheus](https://prometheus.io/) 的指标应该遵循
-[Kubernetes Instrumentation Guidelines](https://github.com/kubernetes/community/blob/master/contributors/devel/sig-instrumentation/instrumentation.md)，
+[Kubernetes Instrumentation Guidelines（英文）](https://github.com/kubernetes/community/blob/master/contributors/devel/sig-instrumentation/instrumentation.md)，
 使用 `pod`、`namespace` 和 `container` 标签来标识容器。
 
 <!--
@@ -419,7 +519,7 @@ this feature `kubelet` must be started with the following flags:
 要启用此特性，必须使用以下标志启动 `kubelet`：
 
 ```
---feature-gates=DynamicResourceAllocation=true,KubeletPodResourcesDynamiceResources=true
+--feature-gates=DynamicResourceAllocation=true,KubeletPodResourcesDynamicResources=true
 ```
 
 <!--
@@ -572,7 +672,7 @@ below:
 3. Subtract out all of the CPUs from the `GetCpuIds` calls from the `GetAllocatableResources` call
 -->
 `List` 端点中的 `ContainerResources` 中的 cpu_ids 对应于分配给某个容器的专属 CPU。
-如果要统计共享池中的 CPU，`List` 端点需要与 `GetAllocatableResources` 端点一起使用，如下所述:
+如果要统计共享池中的 CPU，`List` 端点需要与 `GetAllocatableResources` 端点一起使用，如下所述：
 
 1. 调用 `GetAllocatableResources` 获取所有可用的 CPU。
 2. 在系统中所有的 `ContainerResources` 上调用 `GetCpuIds`。
@@ -584,7 +684,7 @@ below:
 -->
 ### `GetAllocatableResources` gRPC 端点 {#grpc-endpoint-getallocatableresources}
 
-{{< feature-state state="beta" for_k8s_version="v1.23" >}}
+{{< feature-state state="stable" for_k8s_version="v1.28" >}}
 
 <!--
 GetAllocatableResources provides information on resources initially available on the worker node.
@@ -606,12 +706,12 @@ However, calling `GetAllocatableResources` endpoint is not sufficient in case of
 update and Kubelet needs to be restarted to reflect the correct resource capacity and allocatable.
 -->
 `GetAllocatableResources` 应该仅被用于评估一个节点上的[可分配的](/zh-cn/docs/tasks/administer-cluster/reserve-compute-resources/#node-allocatable)资源。
-如果目标是评估空闲/未分配的资源，此调用应该与 List() 端点一起使用。
+如果目标是评估空闲/未分配的资源，此调用应该与 `List()` 端点一起使用。
 除非暴露给 kubelet 的底层资源发生变化，否则 `GetAllocatableResources` 得到的结果将保持不变。
 这种情况很少发生，但当发生时（例如：热插拔，设备健康状况改变），客户端应该调用 `GetAlloctableResources` 端点。
 
-然而，调用 `GetAllocatableResources` 端点在 cpu、内存被更新的情况下是不够的，
-Kubelet 需要重新启动以获取正确的资源容量和可分配的资源。
+然而，调用 `GetAllocatableResources` 端点在 CPU、内存被更新的情况下是不够的，
+kubelet 需要重新启动以获取正确的资源容量和可分配的资源。
 {{< /note >}}
 
 ```gRPC
@@ -621,23 +721,6 @@ message AllocatableResourcesResponse {
     repeated int64 cpu_ids = 2;
     repeated ContainerMemory memory = 3;
 }
-```
-
-<!--
-Starting from Kubernetes v1.23, the `GetAllocatableResources` is enabled by default.
-You can disable it by turning off the `KubeletPodResourcesGetAllocatable`
-[feature gate](/docs/reference/command-line-tools-reference/feature-gates/).
-
-Preceding Kubernetes v1.23, to enable this feature `kubelet` must be started with the following flag:
--->
-从 Kubernetes v1.23 开始，`GetAllocatableResources` 被默认启用。
-你可以通过关闭 `KubeletPodResourcesGetAllocatable`
-[特性门控](/zh-cn/docs/reference/command-line-tools-reference/feature-gates/)来禁用。
-
-在 Kubernetes v1.23 之前，要启用这一功能，`kubelet` 必须用以下标志启动：
-
-```
---feature-gates=KubeletPodResourcesGetAllocatable=true
 ```
 
 <!--
@@ -659,10 +742,6 @@ agents must run in a privileged security context. If a device monitoring agent i
 DaemonSet, `/var/lib/kubelet/pod-resources` must be mounted as a
 {{< glossary_tooltip term_id="volume" >}} in the device monitoring agent's
 [PodSpec](/docs/reference/generated/kubernetes-api/{{< param "version" >}}/#podspec-v1-core).
-
-Support for the `PodResourcesLister service` requires `KubeletPodResources`
-[feature gate](/docs/reference/command-line-tools-reference/feature-gates/) to be enabled.
-It is enabled by default starting with Kubernetes 1.15 and is v1 since Kubernetes 1.20.
 -->
 gRPC 服务通过 `/var/lib/kubelet/pod-resources/kubelet.sock` 的 UNIX 套接字来提供服务。
 设备插件资源的监控代理程序可以部署为守护进程或者 DaemonSet。
@@ -673,9 +752,33 @@ gRPC 服务通过 `/var/lib/kubelet/pod-resources/kubelet.sock` 的 UNIX 套接�
 中声明将 `/var/lib/kubelet/pod-resources`
 目录以{{< glossary_tooltip text="卷" term_id="volume" >}}的形式被挂载到设备监控代理中。
 
-对 “PodResourcesLister 服务”的支持要求启用 `KubeletPodResources`
-[特性门控](/zh-cn/docs/reference/command-line-tools-reference/feature-gates/)。
-从 Kubernetes 1.15 开始默认启用，自从 Kubernetes 1.20 开始为 v1。
+{{< note >}}
+
+<!--
+When accessing the `/var/lib/kubelet/pod-resources/kubelet.sock` from DaemonSet
+or any other app deployed as a container on the host, which is mounting socket as
+a volume, it is a good practice to mount directory `/var/lib/kubelet/pod-resources/`
+instead of the `/var/lib/kubelet/pod-resources/kubelet.sock`. This will ensure
+that after kubelet restart, container will be able to re-connect to this socket.
+-->
+在从 DaemonSet 或以容器形式部署在主机上的任何其他应用中访问
+`/var/lib/kubelet/pod-resources/kubelet.sock` 时，
+如果将套接字作为卷挂载，最好的做法是挂载目录 `/var/lib/kubelet/pod-resources/`
+而不是 `/var/lib/kubelet/pod-resources/kubelet.sock`。
+这样可以确保在 kubelet 重新启动后，容器将能够重新连接到此套接字。
+
+<!--
+Container mounts are managed by inode referencing the socket or directory,
+depending on what was mounted. When kubelet restarts, socket is deleted
+and a new socket is created, while directory stays untouched.
+So the original inode for the socket become unusable. Inode to directory
+will continue working.
+-->
+容器挂载是通过引用套接字或目录的 inode 进行管理的，具体取决于挂载的内容。
+当 kubelet 重新启动时，套接字会被删除并创建一个新的套接字，而目录则保持不变。
+因此，针对原始套接字的 inode 将变得无法使用，而到目录的 inode 将继续正常工作。
+
+{{< /note >}}
 
 <!--
 ### `Get` gRPC endpoint {#grpc-endpoint-get}
@@ -727,7 +830,7 @@ ensure your kubelet services are started with the following flags:
 要启用此特性，你必须确保使用以下标志启动 kubelet 服务：
 
 ```
---feature-gates=KubeletPodResourcesGet=true,DynamicResourceAllocation=true,KubeletPodResourcesDynamiceResources=true
+--feature-gates=KubeletPodResourcesGet=true,DynamicResourceAllocation=true,KubeletPodResourcesDynamicResources=true
 ```
 
 <!--
@@ -735,14 +838,14 @@ ensure your kubelet services are started with the following flags:
 -->
 ## 设备插件与拓扑管理器的集成   {#device-plugin-integration-with-the-topology-manager}
 
-{{< feature-state for_k8s_version="v1.18" state="beta" >}}
+{{< feature-state for_k8s_version="v1.27" state="stable" >}}
 
 <!--
 The Topology Manager is a Kubelet component that allows resources to be co-ordinated in a Topology
 aligned manner. In order to do this, the Device Plugin API was extended to include a
 `TopologyInfo` struct.
 -->
-拓扑管理器是 Kubelet 的一个组件，它允许以拓扑对齐方式来调度资源。
+拓扑管理器是 kubelet 的一个组件，它允许以拓扑对齐方式来调度资源。
 为了做到这一点，设备插件 API 进行了扩展来包括一个 `TopologyInfo` 结构体。
 
 ```gRPC
@@ -794,7 +897,9 @@ pluginapi.Device{ID: "25102017", Health: pluginapi.Healthy, Topology:&pluginapi.
 <!--
 Here are some examples of device plugin implementations:
 
-* The [AMD GPU device plugin](https://github.com/RadeonOpenCompute/k8s-device-plugin)
+* [Akri](https://github.com/project-akri/akri), which lets you easily expose heterogeneous leaf devices (such as IP cameras and USB devices).
+* The [AMD GPU device plugin](https://github.com/ROCm/k8s-device-plugin)
+* The [generic device plugin](https://github.com/squat/generic-device-plugin) for generic Linux devices and USB devices
 * The [Intel device plugins](https://github.com/intel/intel-device-plugins-for-kubernetes) for
   Intel GPU, FPGA, QAT, VPU, SGX, DSA, DLB and IAA devices
 * The [KubeVirt device plugins](https://github.com/kubevirt/kubernetes-device-plugins) for
@@ -808,10 +913,12 @@ Here are some examples of device plugin implementations:
 -->
 下面是一些设备插件实现的示例：
 
-* [AMD GPU 设备插件](https://github.com/RadeonOpenCompute/k8s-device-plugin)
+* [Akri](https://github.com/project-akri/akri)，它可以让你轻松公开异构叶子设备（例如 IP 摄像机和 USB 设备）。
+* [AMD GPU 设备插件](https://github.com/ROCm/k8s-device-plugin)
+* 适用于通用 Linux 设备和 USB 设备的[通用设备插件](https://github.com/squat/generic-device-plugin)
 * [Intel 设备插件](https://github.com/intel/intel-device-plugins-for-kubernetes)支持
   Intel GPU、FPGA、QAT、VPU、SGX、DSA、DLB 和 IAA 设备
-* [KubeVirt 设备插件](https://github.com/kubevirt/kubernetes-device-plugins) 用于硬件辅助的虚拟化
+* [KubeVirt 设备插件](https://github.com/kubevirt/kubernetes-device-plugins)用于硬件辅助的虚拟化
 * [为 Container-Optimized OS 所提供的 NVIDIA GPU 设备插件](https://github.com/GoogleCloudPlatform/container-engine-accelerators/tree/master/cmd/nvidia_gpu)
 * [RDMA 设备插件](https://github.com/hustcat/k8s-rdma-device-plugin)
 * [SocketCAN 设备插件](https://github.com/collabora/k8s-socketcan)

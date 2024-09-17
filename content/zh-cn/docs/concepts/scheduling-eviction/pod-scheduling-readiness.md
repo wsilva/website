@@ -11,11 +11,11 @@ weight: 40
 
 <!-- overview -->
 
-{{< feature-state for_k8s_version="v1.26" state="alpha" >}}
+{{< feature-state for_k8s_version="v1.30" state="stable" >}}
 
 <!--
 Pods were considered ready for scheduling once created. Kubernetes scheduler
-does its due diligence to find nodes to place all pending Pods. However, in a 
+does its due diligence to find nodes to place all pending Pods. However, in a
 real-world case, some Pods may stay in a "miss-essential-resources" state for a long period.
 These Pods actually churn the scheduler (and downstream integrators like Cluster AutoScaler)
 in an unnecessary manner.
@@ -46,7 +46,7 @@ each schedulingGate can be removed in arbitrary order, but addition of a new sch
 该字段只能在创建 Pod 时初始化（由客户端创建，或在准入期间更改）。
 创建后，每个 schedulingGate 可以按任意顺序删除，但不允许添加新的调度门控。
 
-{{< figure src="/docs/images/podSchedulingGates.svg" alt="pod-scheduling-gates-diagram" caption="<!--Figure. Pod SchedulingGates-->图：Pod SchedulingGates" class="diagram-large" link="https://mermaid.live/edit#pako:eNplkktTwyAUhf8KgzuHWpukaYszutGlK3caFxQuCVMCGSDVTKf_XfKyPlhxz4HDB9wT5lYAptgHFuBRsdKxenFMClMYFIdfUdRYgbiD6ItJTEbR8wpEq5UpUfnDTf-5cbPoJjcbXdcaE61RVJIiqJvQ_Y30D-OCt-t3tFjcR5wZayiVnIGmkv4NiEfX9jijKTmmRH5jf0sRugOP0HyHUc1m6KGMFP27cM28fwSJDluPpNKaXqVJzmFNfHD2APRKSjnNFx9KhIpmzSfhVls3eHdTRrwG8QnxKfEZUUNeYTDBNbiaKRF_5dSfX-BQQQ0FpnEqQLJWhwIX5hyXsjbYl85wTINrgeC2EZd_xFQy7b_VJ6GCdd-itkxALE84dE3fAqXyIUZya6Qqe711OspVCI2ny2Vv35QqVO3-htt66ZWomAvVcZcv8yTfsiSFfJOydZoKvl_ttjLJVlJsblcJw-czwQ0zr9ZeqGDgeR77b2jD8xdtjtDn" >}}
+{{< figure src="/zh-cn/docs/images/podSchedulingGates.svg" alt="pod-scheduling-gates-diagram" caption="<!--Figure. Pod SchedulingGates-->图：Pod SchedulingGates" class="diagram-large" link="https://mermaid.live/edit#pako:eNplUctqFEEU_ZWispOejNPd6UxKcBVxJQjZabuo1KO7mO6upqo6GoZZCSIikp2KYuKDJApidKP0CP5Memay8hesfinBWt17zuHec-pOIZGUQQS1wYZtCxwpnA723DALM2CfHiFwW1JQff9WPX5VzcsOdlt4dfawKo-rd2-qJ0fn5aOL56eLZyedxLskOfu6nH_qGL9lFp_fV69PV78OVm-ftozgCOyQmNEiEVl00zoC5z_K5cfy98_DVnH3yj0wGFy3vnp_TSt476tr_5tjAyxP5hcvP_Sb2jE2R3VwfBmzxhcvvgDQ52hRvzfftNZH_UUkwVpvMw4mYw24SBK05rkBYRuONkpOGFrjnHf14L6gJkZ-_sAhMpGq4a51M2wQR7uO9hztO6KZF2bQgSlTKRbUHmha7w-hiVnKQohsSbGahDDMZlaHCyN39jMCkVEFc2CR03_3hIjjRFuUUWGkutVevDl8r7zRMH-FicSU2XYKzX5eiyOhjRUTmXER1XihEgvHxuQaDYc1vR4JExe760SmQy1ojJWJ97aCYeAGY-x6LNj08IbnUbI72hpz1x9xunl15GI4mzkwx9kdKXunsz8c5u0b" >}}
 
 <!--
 ## Usage example
@@ -57,7 +57,7 @@ To mark a Pod not-ready for scheduling, you can create it with one or more sched
 
 要将 Pod 标记为未准备好进行调度，你可以在创建 Pod 时附带一个或多个调度门控，如下所示：
 
-{{< codenew file="pods/pod-with-scheduling-gates.yaml" >}}
+{{% code_sample file="pods/pod-with-scheduling-gates.yaml" %}}
 
 <!--
 After the Pod's creation, you can check its state using:
@@ -98,11 +98,11 @@ The output is:
 
 <!--
 To inform scheduler this Pod is ready for scheduling, you can remove its `schedulingGates` entirely
-by re-applying a modified manifest:
+by reapplying a modified manifest:
 -->
 要通知调度程序此 Pod 已准备好进行调度，你可以通过重新应用修改后的清单来完全删除其 `schedulingGates`：
 
-{{< codenew file="pods/pod-without-scheduling-gates.yaml" >}}
+{{% code_sample file="pods/pod-without-scheduling-gates.yaml" %}}
 
 <!--
 You can check if the `schedulingGates` is cleared by running:
@@ -130,7 +130,7 @@ transited from previous `SchedulingGated` to `Running`:
 `SchedulingGated` 转变为 `Running`：
 
 ```none
-NAME       READY   STATUS    RESTARTS   AGE   IP         NODE  
+NAME       READY   STATUS    RESTARTS   AGE   IP         NODE
 test-pod   1/1     Running   0          15s   10.0.0.4   node-2
 ```
 
@@ -148,16 +148,14 @@ scheduling. You can use `scheduler_pending_pods{queue="gated"}` to check the met
 你可以使用 `scheduler_pending_pods{queue="gated"}` 来检查指标结果。
 
 <!--
-## Mutable Pod Scheduling Directives
+## Mutable Pod scheduling directives
 -->
 ## 可变 Pod 调度指令    {#mutable-pod-scheduling-directives}
 
-{{< feature-state for_k8s_version="v1.27" state="beta" >}}
-
 <!--
 You can mutate scheduling directives of Pods while they have scheduling gates, with certain constraints.
-At a high level, you can only tighten the scheduling directives of a Pod. In other words, the updated 
-directives would cause the Pods to only be able to be scheduled on a subset of the nodes that it would 
+At a high level, you can only tighten the scheduling directives of a Pod. In other words, the updated
+directives would cause the Pods to only be able to be scheduled on a subset of the nodes that it would
 previously match. More concretely, the rules for updating a Pod's scheduling directives are as follows:
 -->
 当 Pod 具有调度门控时，你可以在某些约束条件下改变 Pod 的调度指令。
@@ -180,7 +178,7 @@ Pod 只能被调度到它之前匹配的节点子集上。
    or `fieldExpressions` are allowed, and no changes to existing `matchExpressions`
    and `fieldExpressions` will be allowed. This is because the terms in
    `.requiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms`, are ORed
-   while the expressions in `nodeSelectorTerms[].matchExpressions` and 
+   while the expressions in `nodeSelectorTerms[].matchExpressions` and
    `nodeSelectorTerms[].fieldExpressions` are ANDed.
 -->
 3. 如果 `NodeSelectorTerms` 之前为空，则允许设置该字段。

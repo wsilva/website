@@ -39,10 +39,10 @@ Um kubectl auf Linux zu installieren, gibt es die folgenden Möglichkeiten:
    {{< note >}}
    Um eine spezifische Version herunterzuladen, ersetze `$(curl -L -s https://dl.k8s.io/release/stable.txt)` mit der spezifischen Version.
 
-   Um zum Beispiel Version {{< param "fullversion" >}} auf Linux herunterzuladen:
+   Um zum Beispiel Version {{< skew currentPatchVersion >}} auf Linux herunterzuladen:
 
    ```bash
-   curl -LO https://dl.k8s.io/release/{{< param "fullversion" >}}/bin/linux/amd64/kubectl
+   curl -LO https://dl.k8s.io/release/v{{< skew currentPatchVersion >}}/bin/linux/amd64/kubectl
    ```
    {{< /note >}}
 
@@ -51,7 +51,7 @@ Um kubectl auf Linux zu installieren, gibt es die folgenden Möglichkeiten:
    Download der kubectl Checksum-Datei:
 
    ```bash
-   curl -LO "https://dl.k8s.io/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl.sha256"
+   curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl.sha256"
    ```
 
    Kubectl Binary mit der Checksum-Datei validieren:
@@ -68,7 +68,7 @@ Um kubectl auf Linux zu installieren, gibt es die folgenden Möglichkeiten:
 
    Falls die Validierung fehlschlägt, beendet sich `sha256` mit einem "nonzero"-Status und gibt einen Fehler aus, welcher so aussehen könnte:
 
-   ```bash
+   ```console
    kubectl: FAILED
    sha256sum: WARNING: 1 computed checksum did NOT match
    ```
@@ -139,7 +139,7 @@ Um kubectl auf Linux zu installieren, gibt es die folgenden Möglichkeiten:
 2. Den öffentlichen Google Cloud Signaturschlüssel herunterladen:
 
    ```shell
-   sudo curl -fsSLo /etc/apt/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
+   curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-archive-keyring.gpg
    ```
 
 3. Kubernetes zum `apt` Repository:
@@ -163,17 +163,60 @@ Falls es benötigt wird, kann es angelegt werden. Hierzu sollte es danach von je
 {{% /tab %}}
 
 {{% tab name="Red Hat-basierte Distributionen" %}}
-```bash
-cat <<EOF | sudo tee /etc/yum.repos.d/kubernetes.repo
-[kubernetes]
-name=Kubernetes
-baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-\$basearch
-enabled=1
-gpgcheck=1
-gpgkey=https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
-EOF
-sudo yum install -y kubectl
-```
+
+1. Hinzufügen des Kubernetes `yum` Repository. Wenn eine andere Kubernetes Version als {{< param "version" >}} installiert werden soll, muss {{< param "version" >}} im unteren Block durch die gewünschte Version ersetzt werden.
+
+   ```bash
+   # Bestehende Inhalte in /etc/yum.repos.d/kubernetes.repo werden überschrieben
+   cat <<EOF | sudo tee /etc/yum.repos.d/kubernetes.repo
+   [kubernetes]
+   name=Kubernetes
+   baseurl=https://pkgs.k8s.io/core:/stable:/{{< param "version" >}}/rpm/
+   enabled=1
+   gpgcheck=1
+   gpgkey=https://pkgs.k8s.io/core:/stable:/{{< param "version" >}}/rpm/repodata/repomd.xml.key
+   EOF
+   ```
+{{< note >}}
+Wenn eine andere minor Version von kubectl installiert werden soll muss `/etc/yum.repos.d/kubernetes.repo` angepasst werden
+bevor `yum install` ausgeführt wird. Eine genauere Beschreibung findet sich hier
+[Wechseln des Kubernetes Package Repository](/docs/tasks/administer-cluster/kubeadm/change-package-repository/).
+{{< /note >}}
+
+2. Installieren von kubectl mit Hilfe von `yum`:
+
+   ```bash
+   sudo yum install -y kubectl
+   ```
+
+{{% /tab %}}
+
+{{% tab name="SUSE-basierte Distributionen" %}}
+1. Hinzufügen des Kubernetes `zypper` Repository. Wenn eine andere Kubernetes Version als {{< param "version" >}} installiert werden soll, muss {{< param "version" >}} im unteren Block durch die gewünschte Version ersetzt werden.
+
+   ```bash
+   # Bestehende Inhalte in /etc/zypp/repos.d/kubernetes.repo werden überschrieben
+   cat <<EOF | sudo tee /etc/zypp/repos.d/kubernetes.repo
+   [kubernetes]
+   name=Kubernetes
+   baseurl=https://pkgs.k8s.io/core:/stable:/{{< param "version" >}}/rpm/
+   enabled=1
+   gpgcheck=1
+   gpgkey=https://pkgs.k8s.io/core:/stable:/{{< param "version" >}}/rpm/repodata/repomd.xml.key
+   EOF
+   ```
+
+{{< note >}}
+Wenn eine andere minor Version von kubectl installiert werden soll muss `/etc/zypp/repos.d/kubernetes.repo` angepasst werden
+bevor `zypper update` ausgeführt wird. Eine genauere Beschreibung findet sich hier
+[Wechseln des Kubernetes Package Repository](/docs/tasks/administer-cluster/kubeadm/change-package-repository/).
+{{< /note >}}
+
+   2. Install kubectl using `zypper`:
+
+      ```bash
+      sudo zypper install -y kubectl
+      ```
 
 {{% /tab %}}
 {{< /tabs >}}
@@ -236,7 +279,7 @@ Untenstehend ist beschrieben, wie die Autovervollständigungen für Fish und Zsh
    Download der kubectl-convert Checksum-Datei:
 
    ```bash
-   curl -LO "https://dl.k8s.io/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl-convert.sha256"
+   curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl-convert.sha256"
    ```
 
    Kubectl-convert Binary mit der Checksum-Datei validieren:
@@ -253,7 +296,7 @@ Untenstehend ist beschrieben, wie die Autovervollständigungen für Fish und Zsh
 
    Falls die Validierung fehlschlägt, beendet sich `sha256` mit einem "nonzero"-Status und gibt einen Fehler aus, welcher so aussehen könnte:
 
-   ```bash
+   ```console
    kubectl-convert: FAILED
    sha256sum: WARNING: 1 computed checksum did NOT match
    ```

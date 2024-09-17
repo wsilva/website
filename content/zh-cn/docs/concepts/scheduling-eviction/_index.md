@@ -3,9 +3,9 @@ title: 调度、抢占和驱逐
 weight: 95
 content_type: concept
 description: >
-  在 Kubernetes 中，调度 (scheduling) 指的是确保 Pod 匹配到合适的节点，
-  以便 kubelet 能够运行它们。抢占 (Preemption) 指的是终止低优先级的 Pod 以便高优先级的 Pod
-  可以调度运行的过程。驱逐 (Eviction) 是在资源匮乏的节点上，主动让一个或多个 Pod 失效的过程。
+  在 Kubernetes 中，调度（scheduling）指的是确保 Pod 匹配到合适的节点，
+  以便 kubelet 能够运行它们。抢占（Preemption）指的是终止低优先级的 Pod 以便高优先级的 Pod
+  可以调度运行的过程。驱逐（Eviction）是在资源匮乏的节点上，主动让一个或多个 Pod 失效的过程。
 no_list: true
 ---
 
@@ -30,12 +30,12 @@ is the process of terminating Pods with lower {{<glossary_tooltip text="Priority
 so that Pods with higher Priority can schedule on Nodes. Eviction is the process
 of terminating one or more Pods on Nodes.
 -->
-在 Kubernetes 中，调度 (scheduling) 指的是确保 {{<glossary_tooltip text="Pod" term_id="pod">}}
+在 Kubernetes 中，调度（scheduling）指的是确保 {{<glossary_tooltip text="Pod" term_id="pod">}}
 匹配到合适的{{<glossary_tooltip text="节点" term_id="node">}}，
 以便 {{<glossary_tooltip text="kubelet" term_id="kubelet">}} 能够运行它们。
-抢占 (Preemption) 指的是终止低{{<glossary_tooltip text="优先级" term_id="pod-priority">}}的 Pod
-以便高优先级的 Pod 可以调度运行的过程。
-驱逐 (Eviction) 是在资源匮乏的节点上，主动让一个或多个 Pod 失效的过程。
+抢占（Preemption）指的是终止低{{<glossary_tooltip text="优先级" term_id="pod-priority">}}的
+Pod 以便高优先级的 Pod 可以调度运行的过程。
+驱逐（Eviction）是在资源匮乏的节点上，主动让一个或多个 Pod 失效的过程。
 
 <!--
 ## Scheduling
@@ -50,8 +50,8 @@ of terminating one or more Pods on Nodes.
 * [Scheduler Performance Tuning](/docs/concepts/scheduling-eviction/scheduler-perf-tuning/)
 * [Resource Bin Packing for Extended Resources](/docs/concepts/scheduling-eviction/resource-bin-packing/)
 * [Pod Scheduling Readiness](/docs/concepts/scheduling-eviction/pod-scheduling-readiness/)
+* [Descheduler](https://github.com/kubernetes-sigs/descheduler#descheduler-for-kubernetes)
 -->
-
 ## 调度
 
 * [Kubernetes 调度器](/zh-cn/docs/concepts/scheduling-eviction/kube-scheduler/)
@@ -64,6 +64,7 @@ of terminating one or more Pods on Nodes.
 * [调度器性能调试](/zh-cn/docs/concepts/scheduling-eviction/scheduler-perf-tuning/)
 * [扩展资源的资源装箱](/zh-cn/docs/concepts/scheduling-eviction/resource-bin-packing/)
 * [Pod 调度就绪](/zh-cn/docs/concepts/scheduling-eviction/pod-scheduling-readiness/)
+* [Descheduler](https://github.com/kubernetes-sigs/descheduler#descheduler-for-kubernetes)
 
 <!--
 ## Pod Disruption
@@ -72,7 +73,6 @@ of terminating one or more Pods on Nodes.
 * [Node-pressure Eviction](/docs/concepts/scheduling-eviction/node-pressure-eviction/)
 * [API-initiated Eviction](/docs/concepts/scheduling-eviction/api-eviction/)
 -->
-
 ## Pod 干扰
 
 {{<glossary_definition term_id="pod-disruption" length="all">}}

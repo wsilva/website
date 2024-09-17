@@ -4,6 +4,7 @@ content_type: concept
 # reviewers:
 # - brendandburns
 # - thockin
+weight: 50
 ---
 
 <!-- overview -->
@@ -14,6 +15,7 @@ content_type: concept
 ## docker run
 
 nginx 디플로이먼트(Deployment)를 실행하고 해당 디플로이먼트를 노출시키려면, [kubectl create deployment](/docs/reference/generated/kubectl/kubectl-commands#-em-deployment-em-)을 참고한다.
+
 docker:
 
 ```shell

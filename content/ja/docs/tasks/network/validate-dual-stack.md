@@ -11,7 +11,7 @@ content_type: task
 ## {{% heading "prerequisites" %}}
 
 
-* プロバイダーがデュアルスタックのネットワークをサポートしていること (クラウドプロバイダーか、ルーティングできるIPv4/IPv6ネットワークインターフェイスを持つKubernetesノードが提供できること)
+* プロバイダーがデュアルスタックのネットワークをサポートしていること (クラウドプロバイダーか、ルーティングできるIPv4/IPv6ネットワークインターフェースを持つKubernetesノードが提供できること)
 * (KubenetやCalicoなど)デュアルスタックをサポートする[ネットワークプラグイン](/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/)
 * [デュアルスタックを有効化](/ja/docs/concepts/services-networking/dual-stack/)したクラスター
 
@@ -37,7 +37,7 @@ kubectl get nodes k8s-linuxpool1-34450317-0 -o go-template --template='{{range .
 
 IPv4ブロックとIPv6ブロックがそれぞれ1つずつ割り当てられているはずです。
 
-ノードが検出されたIPv4とIPv6のインターフェイスを持っていることを検証します。ノード名は自分のクラスター内の有効なノード名に置換してください。この例では、ノード名は`k8s-linuxpool1-34450317-0`になっています。
+ノードが検出されたIPv4とIPv6のインターフェースを持っていることを検証します。ノード名は自分のクラスター内の有効なノード名に置換してください。この例では、ノード名は`k8s-linuxpool1-34450317-0`になっています。
 
 ```shell
 kubectl get nodes k8s-linuxpool1-34450317-0 -o go-template --template='{{range .status.addresses}}{{printf "%s: %s\n" .type .address}}{{end}}'
@@ -100,7 +100,7 @@ fe00::2    ip6-allrouters
 
 `.spec.isFamilyPolicy`を明示的に定義していない、以下のようなServiceを作成してみます。Kubernetesは最初に設定した`service-cluster-ip-range`の範囲からServiceにcluster IPを割り当てて、`.spec.ipFamilyPolicy`を`SingleStack`に設定します。
 
-{{< codenew file="service/networking/dual-stack-default-svc.yaml" >}}
+{{% codenew file="service/networking/dual-stack-default-svc.yaml" %}}
 
 `kubectl`を使ってServiceのYAMLを表示します。
 
@@ -137,7 +137,7 @@ status:
 
 `.spec.ipFamilies`内の配列の1番目の要素に`IPv6`を明示的に指定した、次のようなServiceを作成してみます。Kubernetesは`service-cluster-ip-range`で設定したIPv6の範囲からcluster IPを割り当てて、`.spec.ipFamilyPolicy`を`SingleStack`に設定します。
 
-{{< codenew file="service/networking/dual-stack-ipfamilies-ipv6.yaml" >}}
+{{% codenew file="service/networking/dual-stack-ipfamilies-ipv6.yaml" %}}
 
 `kubectl`を使ってServiceのYAMLを表示します。
 
@@ -175,7 +175,7 @@ status:
 
 `.spec.ipFamiliePolicy`に`PreferDualStack`を明示的に指定した、次のようなServiceを作成してみます。Kubernetesは(クラスターでデュアルスタックを有効化しているため)IPv4およびIPv6のアドレスの両方を割り当て、`.spec.ClusterIPs`のリストから、`.spec.ipFamilies`配列の最初の要素のアドレスファミリーに基づいた`.spec.ClusterIP`を設定します。
 
-{{< codenew file="service/networking/dual-stack-preferred-svc.yaml" >}}
+{{% codenew file="service/networking/dual-stack-preferred-svc.yaml" %}}
 
 {{< note >}}
 `kubectl get svc`コマンドは、`CLUSTER-IP`フィールドにプライマリーのIPだけしか表示しません。
@@ -216,7 +216,7 @@ Events:            <none>
 
 クラウドプロバイダーがIPv6を有効化した外部ロードバランサーのプロビジョニングをサポートする場合、`.spec.ipFamilyPolicy`に`PreferDualStack`を指定し、`.spec.ipFamilies`の最初の要素を`IPv6`にして、`type`フィールドに`LoadBalancer`を指定したServiceを作成できます。
 
-{{< codenew file="service/networking/dual-stack-prefer-ipv6-lb-svc.yaml" >}}
+{{% codenew file="service/networking/dual-stack-prefer-ipv6-lb-svc.yaml" %}}
 
 Serviceを確認します。
 

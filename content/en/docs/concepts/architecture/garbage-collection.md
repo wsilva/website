@@ -111,14 +111,14 @@ to override this behaviour, see [Delete owner objects and orphan dependents](/do
 ## Garbage collection of unused containers and images {#containers-images}
 
 The {{<glossary_tooltip text="kubelet" term_id="kubelet">}} performs garbage
-collection on unused images every five minutes and on unused containers every
+collection on unused images every two minutes and on unused containers every
 minute. You should avoid using external garbage collection tools, as these can
 break the kubelet behavior and remove containers that should exist.
 
 To configure options for unused container and image garbage collection, tune the
 kubelet using a [configuration file](/docs/tasks/administer-cluster/kubelet-config-file/)
 and change the parameters related to garbage collection using the
-[`KubeletConfiguration`](/docs/reference/config-api/kubelet-config.v1beta1/#kubelet-config-k8s-io-v1beta1-KubeletConfiguration)
+[`KubeletConfiguration`](/docs/reference/config-api/kubelet-config.v1beta1/)
 resource type.
 
 ### Container image lifecycle
@@ -136,6 +136,35 @@ Disk usage above the configured `HighThresholdPercent` value triggers garbage
 collection, which deletes images in order based on the last time they were used,
 starting with the oldest first. The kubelet deletes images
 until disk usage reaches the `LowThresholdPercent` value.
+
+#### Garbage collection for unused container images {#image-maximum-age-gc}
+
+{{< feature-state feature_gate_name="ImageMaximumGCAge" >}}
+
+As a beta feature, you can specify the maximum time a local image can be unused for,
+regardless of disk usage. This is a kubelet setting that you configure for each node.
+
+To configure the setting, you need to set a value for the `imageMaximumGCAge` 
+field in the kubelet configuration file.
+
+The value is specified as a Kubernetes _duration_; 
+Valid time units for the `imageMaximumGCAge` field in the kubelet configuration file are:
+- "ns" for nanoseconds
+- "us" or "µs" for microseconds
+- "ms" for milliseconds
+- "s" for seconds
+- "m" for minutes
+- "h" for hours
+
+For example, you can set the configuration field to `12h45m`,
+which means 12 hours and 45 minutes. 
+
+{{< note >}}
+This feature does not track image usage across kubelet restarts. If the kubelet
+is restarted, the tracked image age is reset, causing the kubelet to wait the full
+`imageMaximumGCAge` duration before qualifying images for garbage collection
+based on image age.
+{{< /note>}}
 
 ### Container garbage collection {#container-image-garbage-collection}
 
@@ -174,8 +203,6 @@ configure garbage collection:
 * [Configuring cascading deletion of Kubernetes objects](/docs/tasks/administer-cluster/use-cascading-deletion/)
 * [Configuring cleanup of finished Jobs](/docs/concepts/workloads/controllers/ttlafterfinished/)
   
-<!-- * [Configuring unused container and image garbage collection](/docs/tasks/administer-cluster/reconfigure-kubelet/) -->
-
 ## {{% heading "whatsnext" %}}
 
 * Learn more about [ownership of Kubernetes objects](/docs/concepts/overview/working-with-objects/owners-dependents/).

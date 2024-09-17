@@ -22,27 +22,27 @@ feature:
 <!-- overview -->
 
 <!--
-When you specify a {{< glossary_tooltip term_id="pod" >}}, you can optionally specify how
-much of each resource a {{< glossary_tooltip text="container" term_id="container" >}} needs.
-The most common resources to specify are CPU and memory (RAM); there are others.
+When you specify a {{< glossary_tooltip term_id="pod" >}}, you can optionally specify how much of each resource a 
+{{< glossary_tooltip text="container" term_id="container" >}} needs. The most common resources to specify are CPU and memory 
+(RAM); there are others.
 
 When you specify the resource _request_ for containers in a Pod, the
-{{< glossary_tooltip text="kube-scheduler" term_id="kube-scheduler" >}} uses this
-information to decide which node to place the Pod on. When you specify a resource _limit_
-for a container, the kubelet enforces those limits so that the running container is not
-allowed to use more of that resource than the limit you set. The kubelet also reserves
-at least the _request_ amount of that system resource specifically for that container
-to use.
+{{< glossary_tooltip text="kube-scheduler" term_id="kube-scheduler" >}} uses this information to decide which node to place the Pod on. 
+When you specify a resource _limit_ for a container, the {{< glossary_tooltip text="kubelet" term_id="kubelet" >}} enforces those 
+limits so that the running container is not allowed to use more of that resource 
+than the limit you set. The kubelet also reserves at least the _request_ amount of 
+that system resource specifically for that container to use.
 -->
 当你定义 {{< glossary_tooltip text="Pod" term_id="pod" >}} 时可以选择性地为每个
 {{< glossary_tooltip text="容器" term_id="container" >}}设定所需要的资源数量。
 最常见的可设定资源是 CPU 和内存（RAM）大小；此外还有其他类型的资源。
 
-当你为 Pod 中的 Container 指定了资源 __请求__ 时，
+当你为 Pod 中的 Container 指定了资源 **request（请求）** 时，
 {{< glossary_tooltip text="kube-scheduler" term_id="kube-scheduler" >}}
 就利用该信息决定将 Pod 调度到哪个节点上。
-当你还为 Container 指定了资源 __限制__ 时，kubelet 就可以确保运行的容器不会使用超出所设限制的资源。
-kubelet 还会为容器预留所 __请求__ 数量的系统资源，供其使用。
+当你为 Container 指定了资源 **limit（限制）** 时，{{< glossary_tooltip text="kubelet" term_id="kubelet" >}}
+就可以确保运行的容器不会使用超出所设限制的资源。
+kubelet 还会为容器预留所 **request（请求）** 数量的系统资源，供其使用。
 
 <!-- body -->
 
@@ -218,12 +218,21 @@ CPU 资源总是设置为资源的绝对数量而非相对数量值。
 {{< note >}}
 <!--
 Kubernetes doesn't allow you to specify CPU resources with a precision finer than
-`1m`. Because of this, it's useful to specify CPU units less than `1.0` or `1000m` using
-the milliCPU form; for example, `5m` rather than `0.005`.
+`1m` or `0.001` CPU. To avoid accidentally using an invalid CPU quantity, it's useful to specify CPU units using the milliCPU form 
+instead of the decimal form when using less than 1 CPU unit. 
+
+For example, you have a Pod that uses `5m` or `0.005` CPU and would like to decrease
+its CPU resources. By using the decimal form, it's harder to spot that `0.0005` CPU
+is an invalid value, while by using the milliCPU form, it's easier to spot that
+`0.5m` is an invalid value.
 -->
-Kubernetes 不允许设置精度小于 `1m` 的 CPU 资源。
-因此，当 CPU 单位小于 `1` 或 `1000m` 时，使用毫核的形式是有用的；
-例如 `5m` 而不是 `0.005`。
+Kubernetes 不允许设置精度小于 `1m` 或 `0.001` 的 CPU 资源。
+为了避免意外使用无效的 CPU 数量，当使用少于 1 个 CPU 单元时，使用
+milliCPU 形式而不是十进制形式指定 CPU 单元非常有用。
+
+例如，你有一个使用 `5m` 或 `0.005` 核 CPU 的 Pod，并且希望减少其 CPU 资源。
+通过使用十进制形式，更难发现 `0.0005` CPU 是无效值，而通过使用 milliCPU 形式，
+更容易发现 `0.5m` 是无效值。
 {{< /note >}}
 
 <!--
@@ -376,11 +385,13 @@ limits you defined.
 <!--
 - The memory limit for the Pod or container can also apply to pages in memory backed
   volumes, such as an `emptyDir`. The kubelet tracks `tmpfs` emptyDir volumes as container
-  memory use, rather than as local ephemeral storage.
+  memory use, rather than as local ephemeral storage.　When using memory backed `emptyDir`,
+  be sure to check the notes [below](#memory-backed-emptydir).
 -->
-- Pod 或容器的内存限制也适用于通过内存供应的卷，例如 `emptyDir` 卷。
+- Pod 或容器的内存限制也适用于通过内存作为介质的卷，例如 `emptyDir` 卷。
   kubelet 会跟踪 `tmpfs` 形式的 emptyDir 卷用量，将其作为容器的内存用量，
-  而不是临时存储用量。
+  而不是临时存储用量。当使用内存作为介质的 `emptyDir` 时，
+  请务必查看[下面](#memory-backed-emptydir)的注意事项。
 
 <!--
 If a container exceeds its memory request and the node that it runs on becomes short of
@@ -423,6 +434,85 @@ kubelet 会将 Pod 的资源使用情况作为 Pod
 或者监控工具获得 Pod 的资源使用情况。
 
 <!--
+### Considerations for memory backed `emptyDir` volumes {#memory-backed-emptydir}
+-->
+### 使用内存作为介质的 `emptyDir` 卷的注意事项 {#memory-backed-emptydir}
+
+{{< caution >}}
+<!--
+If you do not specify a `sizeLimit` for an `emptyDir` volume, that volume may
+consume up to that pod's memory limit (`Pod.spec.containers[].resources.limits.memory`).
+If you do not set a memory limit, the pod has no upper bound on memory consumption,
+and can consume all available memory on the node.  Kubernetes schedules pods based
+on resource requests (`Pod.spec.containers[].resources.requests`) and will not
+consider memory usage above the request when deciding if another pod can fit on
+a given node.  This can result in a denial of service and cause the OS to do
+out-of-memory (OOM) handling.  It is possible to create any number of `emptyDir`s
+that could potentially consume all available memory on the node, making OOM
+more likely.
+-->
+如果你没有为 `emptyDir` 卷指定 `sizeLimit`，该卷就会消耗 Pod 的内存，
+卷的用量上限为 Pod 的内存限制（`Pod.spec.containers[].resources.limits.memory`）。
+如果你没有设置内存限制，Pod 的内存消耗将没有上限，并且可能会用掉节点上的所有可用内存。
+Kubernetes 基于资源请求（`Pod.spec.containers[].resources.requests`）调度 Pod，
+并且在决定另一个 Pod 是否适合调度到某个给定的节点上时，不会考虑超出请求的内存用量。
+这可能导致拒绝服务，并使操作系统出现需要处理内存不足（OOM）的情况。
+用户可以创建任意数量的 `emptyDir`，可能会消耗节点上的所有可用内存，使得 OOM 更有可能发生。
+{{< /caution >}}
+
+<!--
+From the perspective of memory management, there are some similarities between
+when a process uses memory as a work area and when using memory-backed
+`emptyDir`. But when using memory as a volume like memory-backed `emptyDir`,
+there are additional points below that you should be careful of.
+-->
+从内存管理的角度来看，进程使用内存作为工作区与使用内存作为 `emptyDir` 的介质有一些相似之处。
+但当将内存用作存储卷（例如内存为介质的 `emptyDir` 卷）时，你需要额外注意以下几点：
+
+<!--
+* Files stored on a memory-backed volume are almost entirely managed by the
+  user application.  Unlike when used as a work area for a process, you can not
+  rely on things like language-level garbage collection.
+* The purpose of writing files to a volume is to save data or pass it between
+  applications.  Neither Kubernetes nor the OS may automatically delete files
+  from a volume, so memory used by those files can not be reclaimed when the
+  system or the pod are under memory pressure.
+* A memory-backed `emptyDir` is useful because of its performance, but memory
+  is generally much smaller in size and much higher in cost than other storage
+  media, such as disks or SSDs.  Using large amounts of memory for `emptyDir`
+  volumes may affect the normal operation of your pod or of the whole node,
+  so should be used carefully.
+-->
+* 存储在内存为介质的卷上的文件几乎完全由用户应用所管理。
+  与用作进程工作区的用法不同，你无法依赖语言级别垃圾回收这类机制。
+* 将文件写入某个卷的目的是保存数据或在应用之间传递数据。
+  Kubernetes 或操作系统都不会自动从卷中删除文件，
+  因此当系统或 Pod 面临内存压力时，将无法回收这些文件所使用的内存。
+* 以内存为介质的 `emptyDir` 因性能较好而很有用，但内存通常比其他存储介质（如磁盘或 SSD）小得多且成本更高。
+  为 `emptyDir` 卷使用大量内存可能会影响 Pod 或整个节点的正常运行，因此你应谨慎使用。
+
+<!--
+If you are administering a cluster or namespace, you can also set
+[ResourceQuota](/docs/concepts/policy/resource-quotas/) that limits memory use;
+you may also want to define a [LimitRange](/docs/concepts/policy/limit-range/)
+for additional enforcement.
+If you specify a `spec.containers[].resources.limits.memory` for each Pod,
+then the muximum size of an `emptyDir` volume will be the pod's memory limit.
+-->
+如果你在管理集群或命名空间，还可以设置限制内存使用的 [ResourceQuota](/zh-cn/docs/concepts/policy/resource-quotas/)；
+你可能还希望定义一个 [LimitRange](/zh-cn/docs/concepts/policy/limit-range/) 以施加额外的限制。如果为每个 Pod
+指定 `spec.containers[].resources.limits.memory`，那么 `emptyDir` 卷的最大尺寸将是该 Pod 的内存限制。
+
+<!--
+As an alternative, a cluster administrator can enforce size limits for
+`emptyDir` volumes in new Pods using a policy mechanism such as
+[ValidationAdmissionPolicy](/docs/reference/access-authn-authz/validating-admission-policy).
+-->
+作为一种替代方案，集群管理员可以使用诸如
+[ValidationAdmissionPolicy](/zh-cn/docs/reference/access-authn-authz/validating-admission-policy)
+之类的策略机制来强制对新 Pod 的 `emptyDir` 卷进行大小限制。
+
+<!--
 ## Local ephemeral storage
 
 Nodes have local ephemeral storage, backed by
@@ -440,8 +530,7 @@ mount [`emptyDir`](/docs/concepts/storage/volumes/#emptydir)
 {{< feature-state for_k8s_version="v1.25" state="stable" >}}
 
 节点通常还可以具有本地的临时性存储，由本地挂接的可写入设备或者有时也用 RAM
-来提供支持。
-“临时（Ephemeral）”意味着对所存储的数据不提供长期可用性的保证。
+来提供支持。“临时（Ephemeral）”意味着对所存储的数据不提供长期可用性的保证。
 
 Pods 通常可以使用临时性本地存储来实现缓冲区、保存日志等功能。
 kubelet 可以为使用本地临时存储的 Pods 提供这种存储空间，允许后者使用
@@ -452,23 +541,43 @@ kubelet 可以为使用本地临时存储的 Pods 提供这种存储空间，允
 The kubelet also uses this kind of storage to hold
 [node-level container logs](/docs/concepts/cluster-administration/logging/#logging-at-the-node-level),
 container images, and the writable layers of running containers.
-
-If a node fails, the data in its ephemeral storage can be lost.
-Your applications cannot expect any performance SLAs (disk IOPS for example)
-from local ephemeral storage.
-
-Kubernetes lets you track, reserve and limit the amount
-of ephemeral local storage a Pod can consume.
 -->
-
 kubelet 也使用此类存储来保存[节点层面的容器日志](/zh-cn/docs/concepts/cluster-administration/logging/#logging-at-the-node-level)、
 容器镜像文件以及运行中容器的可写入层。
 
 {{< caution >}}
+<!--
+If a node fails, the data in its ephemeral storage can be lost.
+Your applications cannot expect any performance SLAs (disk IOPS for example)
+from local ephemeral storage.
+-->
 如果节点失效，存储在临时性存储中的数据会丢失。
 你的应用不能对本地临时性存储的性能 SLA（例如磁盘 IOPS）作任何假定。
 {{< /caution >}}
 
+{{< note >}}
+<!--
+To make the resource quota work on ephemeral-storage, two things need to be done:
+
+* An admin sets the resource quota for ephemeral-storage in a namespace.
+* A user needs to specify limits for the ephemeral-storage resource in the Pod spec.
+
+If the user doesn't specify the ephemeral-storage resource limit in the Pod spec,
+the resource quota is not enforced on ephemeral-storage.
+-->
+为了使临时性存储的资源配额生效，需要完成以下两个步骤：
+
+* 管理员在命名空间中设置临时性存储的资源配额。
+* 用户需要在 Pod spec 中指定临时性存储资源的限制。
+
+如果用户在 Pod spec 中未指定临时性存储资源的限制，
+则临时性存储的资源配额不会生效。
+{{< /note >}}
+
+<!--
+Kubernetes lets you track, reserve and limit the amount
+of ephemeral local storage a Pod can consume.
+-->
 Kubernetes 允许你跟踪、预留和限制 Pod
 可消耗的临时性本地存储数量。
 
@@ -520,6 +629,7 @@ kubelet 会将日志写入到所配置的日志目录（默认为 `/var/log`）�
 你的集群节点当然可以包含其他的、并非用于 Kubernetes 的很多文件系统。
 {{% /tab %}}
 
+{{% tab name="双文件系统" %}}
 <!--
 You have a filesystem on the node that you're using for ephemeral data that
 comes from running Pods: logs, and `emptyDir` volumes. You can use this filesystem
@@ -529,7 +639,15 @@ be the root filesystem.
 The kubelet also writes
 [node-level container logs](/docs/concepts/cluster-administration/logging/#logging-at-the-node-level)
 into the first filesystem, and treats these similarly to ephemeral local storage.
+-->
+你使用节点上的某个文件系统来保存运行 Pod 时产生的临时性数据：日志和
+`emptyDir` 卷等。你可以使用这个文件系统来保存其他数据（例如：与 Kubernetes
+无关的其他系统日志）；这个文件系统还可以是根文件系统。
 
+kubelet 也将[节点层面的容器日志](/zh-cn/docs/concepts/cluster-administration/logging/#logging-at-the-node-level)
+写入到第一个文件系统中，并按临时性本地存储的方式对待之。
+
+<!--
 You also use a separate filesystem, backed by a different logical storage device.
 In this configuration, the directory where you tell the kubelet to place
 container image layers and writeable layers is on this second filesystem.
@@ -539,16 +657,6 @@ The first filesystem does not hold any image layers or writeable layers.
 Your node can have as many other filesystems, not used for Kubernetes,
 as you like.
 -->
-
-{{% tab name="双文件系统" %}}
-
-你使用节点上的某个文件系统来保存运行 Pods 时产生的临时性数据：日志和
-`emptyDir` 卷等。你可以使用这个文件系统来保存其他数据（例如：与 Kubernetes
-无关的其他系统日志）；这个文件系统还可以是根文件系统。
-
-kubelet 也将[节点层面的容器日志](/zh-cn/docs/concepts/cluster-administration/logging/#logging-at-the-node-level)
-写入到第一个文件系统中，并按临时性本地存储的方式对待之。
-
 同时你使用另一个由不同逻辑存储设备支持的文件系统。在这种配置下，你会告诉
 kubelet 将容器镜像层和可写层保存到这第二个文件系统上的某个目录中。
 
@@ -595,11 +703,6 @@ container of a Pod can specify either or both of the following:
 
 * `spec.containers[].resources.limits.ephemeral-storage`
 * `spec.containers[].resources.requests.ephemeral-storage`
-
-Limits and requests for `ephemeral-storage` are measured in byte quantities.
-You can express storage as a plain integer or as a fixed-point number using one of these suffixes:
-E, P, T, G, M, k. You can also use the power-of-two equivalents: Ei, Pi, Ti, Gi,
-Mi, Ki. For example, the following quantities all represent roughly the same value:
 -->
 ### 为本地临时性存储设置请求和限制  {#setting-requests-and-limits-for-local-ephemeral-storage}
 
@@ -609,6 +712,12 @@ Pod 中的每个容器可以设置以下属性：
 * `spec.containers[].resources.limits.ephemeral-storage`
 * `spec.containers[].resources.requests.ephemeral-storage`
 
+<!--
+Limits and requests for `ephemeral-storage` are measured in byte quantities.
+You can express storage as a plain integer or as a fixed-point number using one of these suffixes:
+E, P, T, G, M, k. You can also use the power-of-two equivalents: Ei, Pi, Ti, Gi,
+Mi, Ki. For example, the following quantities all represent roughly the same value:
+-->
 `ephemeral-storage` 的请求和限制是按量纲计量的。
 你可以使用一般整数或者定点数字加上下面的后缀来表达存储量：E、P、T、G、M、k。
 你也可以使用对应的 2 的幂级数来表达：Ei、Pi、Ti、Gi、Mi、Ki。
@@ -635,7 +744,6 @@ storage. Therefore, the Pod has a request of 4GiB of local ephemeral storage, an
 a limit of 8GiB of local ephemeral storage. 500Mi of that limit could be
 consumed by the `emptyDir` volume.
 -->
-
 在下面的例子中，Pod 包含两个容器。每个容器请求 2 GiB 大小的本地临时性存储。
 每个容器都设置了 4 GiB 作为其本地临时性存储的限制。
 因此，整个 Pod 的本地临时性存储请求是 4 GiB，且其本地临时性存储的限制为 8 GiB。
@@ -684,7 +792,6 @@ For more information, see
 
 The scheduler ensures that the sum of the resource requests of the scheduled containers is less than the capacity of the node.
 -->
-
 ### 带临时性存储的 Pods 的调度行为  {#how-pods-with-ephemeral-storage-requests-are-scheduled}
 
 当你创建一个 Pod 时，Kubernetes 调度器会为 Pod 选择一个节点来运行之。
@@ -706,15 +813,6 @@ kubelet measures storage use in:
 
 If a Pod is using more ephemeral storage than you allow it to, the kubelet
 sets an eviction signal that triggers Pod eviction.
-
-For container-level isolation, if a container's writable layer and log
-usage exceeds its storage limit, the kubelet marks the Pod for eviction.
-
-For pod-level isolation the kubelet works out an overall Pod storage limit by
-summing the limits for the containers in that Pod. In this case, if the sum of
-the local ephemeral storage usage from all containers and also the Pod's `emptyDir`
-volumes exceeds the overall Pod storage limit, then the kubelet also marks the Pod
-for eviction.
 -->
 ### 临时性存储消耗的管理 {#resource-emphemeralstorage-consumption}
 
@@ -727,6 +825,16 @@ for eviction.
 如果某 Pod 的临时存储用量超出了你所允许的范围，kubelet
 会向其发出逐出（eviction）信号，触发该 Pod 被逐出所在节点。
 
+<!--
+For container-level isolation, if a container's writable layer and log
+usage exceeds its storage limit, the kubelet marks the Pod for eviction.
+
+For pod-level isolation the kubelet works out an overall Pod storage limit by
+summing the limits for the containers in that Pod. In this case, if the sum of
+the local ephemeral storage usage from all containers and also the Pod's `emptyDir`
+volumes exceeds the overall Pod storage limit, then the kubelet also marks the Pod
+for eviction.
+-->
 就容器层面的隔离而言，如果某容器的可写入镜像层和日志用量超出其存储限制，
 kubelet 也会将所在的 Pod 标记为逐出候选。
 
@@ -853,7 +961,14 @@ If you want to use project quotas, you should:
   using the `featureGates` field in the
   [kubelet configuration](/docs/reference/config-api/kubelet-config.v1beta1/)
   or the `--feature-gates` command line flag.
+-->
+如果你希望使用项目配额，你需要：
 
+* 在 [kubelet 配置](/zh-cn/docs/reference/config-api/kubelet-config.v1beta1/)中使用
+  `featureGates` 字段或者使用 `--feature-gates` 命令行参数启用
+  `LocalStorageCapacityIsolationFSQuotaMonitoring=true` [特性门控](/zh-cn/docs/reference/command-line-tools-reference/feature-gates/)。
+
+<!--
 * Ensure that the root filesystem (or optional runtime filesystem)
   has project quotas enabled. All XFS filesystems support project quotas.
   For ext4 filesystems, you need to enable the project quota tracking feature
@@ -863,18 +978,7 @@ If you want to use project quotas, you should:
   # For ext4, with /dev/block-device not mounted
   sudo tune2fs -O project -Q prjquota /dev/block-device
   ```
-
-* Ensure that the root filesystem (or optional runtime filesystem) is
-  mounted with project quotas enabled. For both XFS and ext4fs, the
-  mount option is named `prjquota`.
 -->
-
-如果你希望使用项目配额，你需要：
-
-* 在 [kubelet 配置](/zh-cn/docs/reference/config-api/kubelet-config.v1beta1/)中使用
-  `featureGates` 字段或者使用 `--feature-gates` 命令行参数启用
-  `LocalStorageCapacityIsolationFSQuotaMonitoring=true` [特性门控](/zh-cn/docs/reference/command-line-tools-reference/feature-gates/)。
-
 * 确保根文件系统（或者可选的运行时文件系统）启用了项目配额。所有 XFS
   文件系统都支持项目配额。
   对 extf 文件系统而言，你需要在文件系统尚未被挂载时启用项目配额跟踪特性：
@@ -884,6 +988,11 @@ If you want to use project quotas, you should:
   sudo tune2fs -O project -Q prjquota /dev/block-device
   ```
 
+<!--
+* Ensure that the root filesystem (or optional runtime filesystem) is
+  mounted with project quotas enabled. For both XFS and ext4fs, the
+  mount option is named `prjquota`.
+-->
 * 确保根文件系统（或者可选的运行时文件系统）在挂载时项目配额特性是被启用了的。
   对于 XFS 和 ext4fs 而言，对应的挂载选项称作 `prjquota`。
 
@@ -1001,14 +1110,14 @@ Cluster-level extended resources are not tied to nodes. They are usually managed
 by scheduler extenders, which handle the resource consumption and resource quota.
 
 You can specify the extended resources that are handled by scheduler extenders
-in [scheduler configuration](/docs/reference/config-api/kube-scheduler-config.v1beta3/)
+in [scheduler configuration](/docs/reference/config-api/kube-scheduler-config.v1/)
 -->
 #### 集群层面的扩展资源   {#cluster-level-extended-resources}
 
 集群层面的扩展资源并不绑定到具体节点。
 它们通常由调度器扩展程序（Scheduler Extenders）管理，这些程序处理资源消耗和资源配额。
 
-你可以在[调度器配置](/zh-cn/docs/reference/config-api/kube-scheduler-config.v1beta3/)
+你可以在[调度器配置](/zh-cn/docs/reference/config-api/kube-scheduler-config.v1/)
 中指定由调度器扩展程序处理的扩展资源。
 
 <!--
@@ -1065,11 +1174,11 @@ available amount is simultaneously allocated to Pods.
 <!--
 The API server restricts quantities of extended resources to whole numbers.
 Examples of _valid_ quantities are `3`, `3000m` and `3Ki`. Examples of
-_invalid_ quantities are `0.5` and `1500m`.
+_invalid_ quantities are `0.5` and `1500m` (because `1500m` would result in `1.5`).
 -->
 API 服务器将扩展资源的数量限制为整数。
 **有效** 数量的示例是 `3`、`3000m` 和 `3Ki`。
-**无效** 数量的示例是 `0.5` 和 `1500m`。
+**无效** 数量的示例是 `0.5` 和 `1500m`（因为 `1500m` 结果等同于 `1.5`）。
 
 {{< note >}}
 <!--
@@ -1195,12 +1304,12 @@ You can check node capacities and amounts allocated with the
 
 - 向集群添加更多节点。
 - 终止不需要的 Pod，为悬决的 Pod 腾出空间。
-- 检查 Pod 所需的资源是否超出所有节点的资源容量。例如，如果所有节点的容量都是`cpu：1`，
+- 检查 Pod 所需的资源是否超出所有节点的资源容量。例如，如果所有节点的容量都是 `cpu：1`，
   那么一个请求为 `cpu: 1.1` 的 Pod 永远不会被调度。
 - 检查节点上的污点设置。如果集群中节点上存在污点，而新的 Pod 不能容忍污点，
   调度器只会考虑将 Pod 调度到不带有该污点的节点上。
 
-你可以使用 `kubectl describe nodes` 命令检查节点容量和已分配的资源数量。 例如：
+你可以使用 `kubectl describe nodes` 命令检查节点容量和已分配的资源数量。例如：
 
 ```shell
 kubectl describe nodes e2e-test-node-pool-4lw4
@@ -1284,7 +1393,7 @@ resource, including a configured ResourceQuota.
 设置资源配额有助于防止一个团队占用太多资源，以至于这种占用会影响其他团队。
 
 你还需要考虑为这些名字空间设置授权访问：
-为名字空间提供 **全部** 的写权限时，具有合适权限的人可能删除所有资源，
+为名字空间提供**全部**的写权限时，具有合适权限的人可能删除所有资源，
 包括所配置的 ResourceQuota。
 
 <!--
@@ -1373,7 +1482,7 @@ memory limit (and possibly request) for that container.
 * Read how the API reference defines a [container](/docs/reference/kubernetes-api/workload-resources/pod-v1/#Container)
   and its [resource requirements](/docs/reference/kubernetes-api/workload-resources/pod-v1/#resources)
 * Read about [project quotas](https://www.linux.org/docs/man8/xfs_quota.html) in XFS
-* Read more about the [kube-scheduler configuration reference (v1beta3)](/docs/reference/config-api/kube-scheduler-config.v1beta3/)
+* Read more about the [kube-scheduler configuration reference (v1)](/docs/reference/config-api/kube-scheduler-config.v1/)
 * Read more about [Quality of Service classes for Pods](/docs/concepts/workloads/pods/pod-qos/)
 -->
 * 获取[分配内存资源给容器和 Pod](/zh-cn/docs/tasks/configure-pod-container/assign-memory-resource/) 的实践经验
@@ -1381,5 +1490,5 @@ memory limit (and possibly request) for that container.
 * 阅读 API 参考如何定义[容器](/zh-cn/docs/reference/kubernetes-api/workload-resources/pod-v1/#Container)
   及其[资源请求](/zh-cn/docs/reference/kubernetes-api/workload-resources/pod-v1/#resources)。
 * 阅读 XFS 中[项目配额](https://www.linux.org/docs/man8/xfs_quota.html)的文档
-* 进一步阅读 [kube-scheduler 配置参考 (v1beta3)](/zh-cn/docs/reference/config-api/kube-scheduler-config.v1beta3/)
+* 进一步阅读 [kube-scheduler 配置参考（v1）](/zh-cn/docs/reference/config-api/kube-scheduler-config.v1/)
 * 进一步阅读 [Pod 的服务质量等级](/zh-cn/docs/concepts/workloads/pods/pod-qos/)

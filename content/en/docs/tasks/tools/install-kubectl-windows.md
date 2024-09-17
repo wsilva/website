@@ -4,10 +4,6 @@ reviewers:
 title: Install and Set Up kubectl on Windows
 content_type: task
 weight: 10
-card:
-  name: tasks
-  weight: 20
-  title: Install kubectl on Windows
 ---
 
 ## {{% heading "prerequisites" %}}
@@ -22,19 +18,24 @@ Using the latest compatible version of kubectl helps avoid unforeseen issues.
 
 The following methods exist for installing kubectl on Windows:
 
-- [Install kubectl binary with curl on Windows](#install-kubectl-binary-with-curl-on-windows)
+- [Install kubectl binary on Windows (via direct download or curl)](#install-kubectl-binary-on-windows-via-direct-download-or-curl)
 - [Install on Windows using Chocolatey, Scoop, or winget](#install-nonstandard-package-tools)
 
-### Install kubectl binary with curl on Windows
+### Install kubectl binary on Windows (via direct download or curl)
 
-1. Download the latest {{< skew currentVersion >}} patch release:
-   [kubectl {{< skew currentPatchVersion >}}](https://dl.k8s.io/release/v{{< skew currentPatchVersion >}}/bin/windows/amd64/kubectl.exe).
+1. You have two options for installing kubectl on your Windows device
 
-   Or if you have `curl` installed, use this command:
+   - Direct download:
+     
+     Download the latest {{< skew currentVersion >}} patch release binary directly for your specific architecture by visiting the [Kubernetes release page](https://kubernetes.io/releases/download/#binaries). Be sure to select the correct binary for your architecture (e.g., amd64, arm64, etc.).
+   
+   - Using curl:
 
-   ```powershell
-   curl.exe -LO "https://dl.k8s.io/release/v{{< skew currentPatchVersion >}}/bin/windows/amd64/kubectl.exe"
-   ```
+     If you have `curl` installed, use this command:
+
+     ```powershell
+     curl.exe -LO "https://dl.k8s.io/release/v{{< skew currentPatchVersion >}}/bin/windows/amd64/kubectl.exe"
+     ```
 
    {{< note >}}
    To find out the latest stable version (for example, for scripting), take a look at
@@ -72,17 +73,6 @@ The following methods exist for installing kubectl on Windows:
    ```cmd
    kubectl version --client
    ```
-
-   {{< note >}}
-   The above command will generate a warning:
-
-   ```
-   WARNING: This version information is deprecated and will be replaced with the output from kubectl version --short.
-   ```
-
-   You can ignore this warning. You are only checking the version of `kubectl` that you
-   have installed.
-   {{< /note >}}
    
    Or use this for detailed view of version:
 
@@ -220,7 +210,8 @@ Below are the procedures to set up autocompletion for PowerShell.
 1. After installing the plugin, clean up the installation files:
 
    ```powershell
-   del kubectl-convert.exe kubectl-convert.exe.sha256
+   del kubectl-convert.exe
+   del kubectl-convert.exe.sha256
    ```
 
 ## {{% heading "whatsnext" %}}

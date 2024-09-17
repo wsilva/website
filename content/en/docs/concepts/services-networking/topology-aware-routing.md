@@ -154,10 +154,9 @@ zone.
 
 ## Constraints
 
-* Topology Aware Hints are not used when either `externalTrafficPolicy` or
-  `internalTrafficPolicy` is set to `Local` on a Service. It is possible to use
-  both features in the same cluster on different Services, just not on the same
-  Service.
+* Topology Aware Hints are not used when `internalTrafficPolicy` is set to `Local`
+  on a Service. It is possible to use both features in the same cluster on different
+  Services, just not on the same Service.
 
 * This approach will not work well for Services that have a large proportion of
   traffic originating from a subset of zones. Instead this assumes that incoming
@@ -199,3 +198,8 @@ yet cover some relevant and plausible situations.
 ## {{% heading "whatsnext" %}}
 
 * Follow the [Connecting Applications with Services](/docs/tutorials/services/connect-applications-service/) tutorial
+* Learn about the
+  [trafficDistribution](/docs/concepts/services-networking/service/#traffic-distribution)
+  field, which is closely related to the `service.kubernetes.io/topology-mode`
+  annotation and provides flexible options for traffic routing within
+  Kubernetes.

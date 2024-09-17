@@ -36,13 +36,13 @@ If you define args, but do not define a command, the default command is used
 with your new arguments.
 
 {{< note >}}
-The `command` field corresponds to `entrypoint` in some container runtimes.
+The `command` field corresponds to `ENTRYPOINT`, and the `args` field corresponds to `CMD` in some container runtimes.
 {{< /note >}}
 
 In this exercise, you create a Pod that runs one container. The configuration
 file for the Pod defines a command and two arguments:
 
-{{< codenew file="pods/commands.yaml" >}}
+{{% code_sample file="pods/commands.yaml" %}}
 
 1. Create a Pod based on the YAML configuration file:
 

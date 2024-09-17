@@ -3,9 +3,10 @@ layout: blog
 title: "Kubernetes 1.26: Pod Scheduling Readiness"
 date: 2022-12-26
 slug: pod-scheduling-readiness-alpha
+author: >
+  Wei Huang (Apple),
+  Abdullah Gharaibeh (Google)
 ---
-
-**Author:** Wei Huang (Apple), Abdullah Gharaibeh (Google)
 
 Kubernetes 1.26 introduced a new Pod feature: _scheduling gates_. In Kubernetes, scheduling gates
 are keys that tell the scheduler when a Pod is ready to be considered for scheduling.
@@ -123,6 +124,6 @@ and scheduler. You're more than welcome to test it out and tell us (SIG Scheduli
 
 ## Additional resources
 
-- [Pod Scheduling Readiness](https://kubernetes.io/docs/concepts/scheduling-eviction/pod-scheduling-readiness/)
+- [Pod Scheduling Readiness](/docs/concepts/scheduling-eviction/pod-scheduling-readiness/)
  in the Kubernetes documentation
 - [Kubernetes Enhancement Proposal](https://github.com/kubernetes/enhancements/blob/master/keps/sig-scheduling/3521-pod-scheduling-readiness/README.md)

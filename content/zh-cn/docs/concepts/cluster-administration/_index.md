@@ -5,6 +5,12 @@ content_type: concept
 description: >
   关于创建和管理 Kubernetes 集群的底层细节。
 no_list: true
+card:
+  name: setup
+  weight: 60
+  anchors:
+  - anchor: "#securing-a-cluster"
+    title: 保护集群
 ---
 <!--
 title: Cluster Administration
@@ -16,6 +22,12 @@ content_type: concept
 description: >
   Lower-level detail relevant to creating or administering a Kubernetes cluster.
 no_list: true
+card:
+  name: setup
+  weight: 60
+  anchors:
+  - anchor: "#securing-a-cluster"
+    title: Securing a cluster
 -->
 
 <!-- overview -->
@@ -86,12 +98,14 @@ Before choosing a guide, here are some considerations:
 ## Managing a cluster
 
 * Learn how to [manage nodes](/docs/concepts/architecture/nodes/).
+  * Read about [cluster autoscaling](/docs/concepts/cluster-administration/cluster-autoscaling/).
 
 * Learn how to set up and manage the [resource quota](/docs/concepts/policy/resource-quotas/) for shared clusters.
 -->
 ## 管理集群   {#managing-a-cluster}
 
 * 学习如何[管理节点](/zh-cn/docs/concepts/architecture/nodes/)。
+  * 阅读[集群自动扩缩](/zh-cn/docs/concepts/cluster-administration/cluster-autoscaling/)。
 
 * 学习如何设定和管理集群共享的[资源配额](/zh-cn/docs/concepts/policy/resource-quotas/)。
 

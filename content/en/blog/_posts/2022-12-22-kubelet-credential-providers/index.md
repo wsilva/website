@@ -3,9 +3,10 @@ layout: blog
 title: 'Kubernetes v1.26: GA Support for Kubelet Credential Providers'
 date: 2022-12-22
 slug: kubelet-credential-providers
+author: >
+  Andrew Sy Kim (Google),
+  Dixita Narang (Google)
 ---
-
-**Authors:** Andrew Sy Kim (Google), Dixita Narang (Google)
 
 Kubernetes v1.26 introduced generally available (GA) support for [_kubelet credential
 provider plugins_]( /docs/tasks/kubelet-credential-provider/kubelet-credential-provider/),
@@ -118,7 +119,7 @@ Below is an overview of how the Kubernetes project is using kubelet credential p
 
 {{< figure src="kubelet-credential-providers-enabling.png" caption="Figure 4: Kubelet credential provider configuration used for Kubernetes e2e testing" >}}
 
-For more configuration details, see [Kubelet Credential Providers](https://kubernetes.io/docs/tasks/kubelet-credential-provider/kubelet-credential-provider/).
+For more configuration details, see [Kubelet Credential Providers](/docs/tasks/kubelet-credential-provider/kubelet-credential-provider/).
 
 ## Getting Involved
 

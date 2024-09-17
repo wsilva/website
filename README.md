@@ -5,7 +5,7 @@
 This repository contains the assets required to build the [Kubernetes website and documentation](https://kubernetes.io/). We're glad that you want to contribute!
 
 - [Contributing to the docs](#contributing-to-the-docs)
-- [Localization ReadMes](#localization-readmemds)
+- [Localization READMEs](#localization-readmes)
 
 ## Using this repository
 
@@ -20,6 +20,9 @@ To use this repository, you need the following installed locally:
 - [Hugo (Extended version)](https://gohugo.io/)
 - A container runtime, like [Docker](https://www.docker.com/).
 
+> [!NOTE]
+Make sure to install the Hugo extended version specified by the `HUGO_VERSION` environment variable in the [`netlify.toml`](netlify.toml#L11) file.
+
 Before you start, install the dependencies. Clone the repository and navigate to the directory:
 
 ```bash
@@ -30,12 +33,14 @@ cd website
 The Kubernetes website uses the [Docsy Hugo theme](https://github.com/google/docsy#readme). Even if you plan to run the website in a container, we strongly recommend pulling in the submodule and other development dependencies by running the following:
 
 ### Windows
+
 ```powershell
 # fetch submodule dependencies
 git submodule update --init --recursive --depth 1
 ```
 
 ### Linux / other Unix
+
 ```bash
 # fetch submodule dependencies
 make module-init
@@ -50,21 +55,27 @@ To build the site in a container, run the following:
 make container-serve
 ```
 
-If you see errors, it probably means that the hugo container did not have enough computing resources available. To solve it, increase the amount of allowed CPU and memory usage for Docker on your machine ([MacOSX](https://docs.docker.com/docker-for-mac/#resources) and [Windows](https://docs.docker.com/docker-for-windows/#resources)).
+If you see errors, it probably means that the hugo container did not have enough computing resources available. To solve it, increase the amount of allowed CPU and memory usage for Docker on your machine ([MacOS](https://docs.docker.com/desktop/settings/mac/) and [Windows](https://docs.docker.com/desktop/settings/windows/)).
 
 Open up your browser to <http://localhost:1313> to view the website. As you make changes to the source files, Hugo updates the website and forces a browser refresh.
 
 ## Running the website locally using Hugo
 
-Make sure to install the Hugo extended version specified by the `HUGO_VERSION` environment variable in the [`netlify.toml`](netlify.toml#L10) file.
+To install dependencies, deploy and test the site locally, run:
 
-To build and test the site locally, run:
+- For macOS and Linux
 
-```bash
-# install dependencies
-npm ci
-make serve
-```
+  ```bash
+  npm ci
+  make serve
+  ```
+
+- For Windows (PowerShell)
+
+  ```powershell
+  npm ci
+  hugo.exe server --buildFuture --environment development
+  ```
 
 This will start the local Hugo server on port 1313. Open up your browser to <http://localhost:1313> to view the website. As you make changes to the source files, Hugo updates the website and forces a browser refresh.
 
@@ -94,10 +105,9 @@ To update the reference pages for a new Kubernetes release follow these steps:
    make api-reference
    ```
 
-   You can test the results locally by making and serving the site from a container image:
+   You can test the results locally by building and serving the site from a container:
 
    ```bash
-   make container-image
    make container-serve
    ```
 
@@ -173,26 +183,28 @@ For more information about contributing to the Kubernetes documentation, see:
 - [Page Content Types](https://kubernetes.io/docs/contribute/style/page-content-types/)
 - [Documentation Style Guide](https://kubernetes.io/docs/contribute/style/style-guide/)
 - [Localizing Kubernetes Documentation](https://kubernetes.io/docs/contribute/localization/)
+- [Introduction to Kubernetes Docs](https://www.youtube.com/watch?v=pprMgmNzDcw)
 
 ### New contributor ambassadors
 
 If you need help at any point when contributing, the [New Contributor Ambassadors](https://kubernetes.io/docs/contribute/advanced/#serve-as-a-new-contributor-ambassador) are a good point of contact. These are SIG Docs approvers whose responsibilities include mentoring new contributors and helping them through their first few pull requests. The best place to contact the New Contributors Ambassadors would be on the [Kubernetes Slack](https://slack.k8s.io/). Current New Contributors Ambassadors for SIG Docs:
 
-| Name                       | Slack                      | GitHub                     |                   
+| Name                       | Slack                      | GitHub                     |
 | -------------------------- | -------------------------- | -------------------------- |
-| Arsh Sharma                | @arsh                      | @RinkiyaKeDad              |
+| Sreeram Venkitesh          | @sreeram.venkitesh         | @sreeram-venkitesh         |
 
-## Localization `README.md`'s
+## Localization READMEs
 
 | Language                   | Language                   |
 | -------------------------- | -------------------------- |
-| [Chinese](README-zh.md)    | [Korean](README-ko.md)     |
-| [French](README-fr.md)     | [Polish](README-pl.md)     |
-| [German](README-de.md)     | [Portuguese](README-pt.md) |
-| [Hindi](README-hi.md)      | [Russian](README-ru.md)    |
-| [Indonesian](README-id.md) | [Spanish](README-es.md)    |
-| [Italian](README-it.md)    | [Ukrainian](README-uk.md)  |
-| [Japanese](README-ja.md)   | [Vietnamese](README-vi.md) |
+| [Bengali](README-bn.md)    | [Korean](README-ko.md)     |
+| [Chinese](README-zh.md)    | [Polish](README-pl.md)     |
+| [French](README-fr.md)     | [Portuguese](README-pt.md) |
+| [German](README-de.md)     | [Russian](README-ru.md)    |
+| [Hindi](README-hi.md)      | [Spanish](README-es.md)    |
+| [Indonesian](README-id.md) | [Ukrainian](README-uk.md)  |
+| [Italian](README-it.md)    | [Vietnamese](README-vi.md) |
+| [Japanese](README-ja.md)   | |
 
 ## Code of conduct
 

@@ -2,10 +2,6 @@
 title: 在 Linux 系统中安装并设置 kubectl
 content_type: task
 weight: 10
-card:
-  name: tasks
-  weight: 20
-  title: 在 Linux 系统中安装 kubectl
 ---
 <!-- 
 reviewers:
@@ -13,17 +9,13 @@ reviewers:
 title: Install and Set Up kubectl on Linux
 content_type: task
 weight: 10
-card:
-  name: tasks
-  weight: 20
-  title: Install kubectl on Linux
 -->
 
 ## {{% heading "prerequisites" %}}
 
 <!--
-You must use a kubectl version that is within one minor version difference of your cluster.
-For example, a v{{< skew currentVersion >}} client can communicate
+You must use a kubectl version that is within one minor version difference of
+your cluster. For example, a v{{< skew currentVersion >}} client can communicate
 with v{{< skew currentVersionAddMinor -1 >}}, v{{< skew currentVersionAddMinor 0 >}},
 and v{{< skew currentVersionAddMinor 1 >}} control planes.
 Using the latest compatible version of kubectl helps avoid unforeseen issues.
@@ -55,7 +47,7 @@ The following methods exist for installing kubectl on Linux:
 <!--
 ### Install kubectl binary with curl on Linux
 -->
-### 用 curl 在 Linux 系统中安装 kubectl {#install-kubectl-binary-with-curl-on-linux}
+### 用 curl 在 Linux 系统中安装 kubectl  {#install-kubectl-binary-with-curl-on-linux}
 
 <!--
 1. Download the latest release with the command:
@@ -93,7 +85,7 @@ The following methods exist for installing kubectl on Linux:
    对于 Linux ARM64 来说，请输入：
 
    ```bash
-   curl -LO https://dl.k8s.io/release/{{< param "fullversion" >}}/bin/linux/arm64/kubectl
+   curl -LO https://dl.k8s.io/release/v{{< skew currentPatchVersion >}}/bin/linux/arm64/kubectl
    ```
    {{< /note >}}
 
@@ -106,12 +98,12 @@ The following methods exist for installing kubectl on Linux:
 
    下载 kubectl 校验和文件：
 
-   {{< tabs name="download_checksum_linux" >}} 
+   {{< tabs name="download_checksum_linux" >}}
    {{< tab name="x86-64" codelang="bash" >}}
-   curl -LO "https://dl.k8s.io/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl.sha256"
+   curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl.sha256"
    {{< /tab >}}
    {{< tab name="ARM64" codelang="bash" >}}
-   curl -LO "https://dl.k8s.io/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/arm64/kubectl.sha256"
+   curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/arm64/kubectl.sha256"
    {{< /tab >}}
    {{< /tabs >}}
 
@@ -138,7 +130,7 @@ The following methods exist for installing kubectl on Linux:
    -->
    验证失败时，`sha256` 将以非零值退出，并打印如下输出：
 
-   ```bash
+   ```console
    kubectl: FAILED
    sha256sum: WARNING: 1 computed checksum did NOT match
    ```
@@ -153,7 +145,7 @@ The following methods exist for installing kubectl on Linux:
 <!--
 1. Install kubectl
 -->
-3. 安装 kubectl
+3. 安装 kubectl：
 
    ```bash
    sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
@@ -166,6 +158,9 @@ The following methods exist for installing kubectl on Linux:
    -->
    即使你没有目标系统的 root 权限，仍然可以将 kubectl 安装到目录 `~/.local/bin` 中：
 
+   <!--
+   # and then append (or prepend) ~/.local/bin to $PATH
+   -->
    ```bash
    chmod +x kubectl
    mkdir -p ~/.local/bin
@@ -183,23 +178,6 @@ Or use this for detailed view of version:
    ```bash
    kubectl version --client
    ```
-
-   {{< note >}}
-   <!--
-   The above command will generate a warning:
-   -->
-   上面的命令会产生一个警告：
-
-   ```
-   WARNING: This version information is deprecated and will be replaced with the output from kubectl version --short.
-   ```
-
-   <!--
-   You can ignore this warning. You are only checking the version of `kubectl` that you
-   have installed.
-   -->
-   你可以忽略这个警告。你只检查你所安装的 `kubectl` 的版本。
-   {{< /note >}}
 
    <!--
    Or use this for detailed view of version:
@@ -223,77 +201,232 @@ Or use this for detailed view of version:
 -->
 1. 更新 `apt` 包索引，并安装使用 Kubernetes `apt` 仓库所需要的包：
 
+   <!--
    ```shell
    sudo apt-get update
-   sudo apt-get install -y ca-certificates curl
+   # apt-transport-https may be a dummy package; if so, you can skip that package
+   sudo apt-get install -y apt-transport-https ca-certificates curl gnupg
    ```
+   -->
+   ```shell
+   sudo apt-get update
+   # apt-transport-https 可以是一个虚拟包；如果是这样，你可以跳过这个包
+   sudo apt-get install -y apt-transport-https ca-certificates curl gnupg
+   ```
+
+<!--
+2. Download the public signing key for the Kubernetes package repositories. The same signing key is used for all repositories so you can disregard the version in the URL:
+-->
+2. 下载 Kubernetes 软件包仓库的公共签名密钥。
+   同一个签名密钥适用于所有仓库，因此你可以忽略 URL 中的版本信息：
 
    <!--
-   If you use Debian 9 (stretch) or earlier you would also need to install `apt-transport-https`:
-   -->   
-   如果你使用 Debian 9（stretch）或更早版本，则你还需要安装 `apt-transport-https`：
-
+   # If the folder `/etc/apt/keyrings` does not exist, it should be created before the curl command, read the note below.
+   # sudo mkdir -p -m 755 /etc/apt/keyrings
+   -->
    ```shell
-   sudo apt-get install -y apt-transport-https
+   # 如果 `/etc/apt/keyrings` 目录不存在，则应在 curl 命令之前创建它，请阅读下面的注释。
+   # sudo mkdir -p -m 755 /etc/apt/keyrings
+   curl -fsSL https://pkgs.k8s.io/core:/stable:/{{< param "version" >}}/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+   sudo chmod 644 /etc/apt/keyrings/kubernetes-apt-keyring.gpg # allow unprivileged APT programs to read this keyring   
    ```
 
+{{< note >}}
 <!--
-2. Download the Google Cloud public signing key:
+In releases older than Debian 12 and Ubuntu 22.04, folder `/etc/apt/keyrings` does not exist by default, and it should be created before the curl command.
 -->
+在低于 Debian 12 和 Ubuntu 22.04 的发行版本中，`/etc/apt/keyrings` 默认不存在。
+应在 curl 命令之前创建它。
+{{< /note >}}
 
-2. 下载 Google Cloud 公开签名秘钥：
+<!--
+3. Add the appropriate Kubernetes `apt` repository. If you want to use Kubernetes version different than {{< param "version" >}},
+   replace {{< param "version" >}} with the desired minor version in the command below:
+-->
+3. 添加合适的 Kubernetes `apt` 仓库。如果你想用 {{< param "version" >}} 之外的 Kubernetes 版本，
+   请将下面命令中的 {{< param "version" >}} 替换为所需的次要版本：
 
+   <!--
    ```shell
-   sudo curl -fsSLo /etc/apt/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
+   # This overwrites any existing configuration in /etc/apt/sources.list.d/kubernetes.list
+   echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/{{< param "version" >}}/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+   sudo chmod 644 /etc/apt/sources.list.d/kubernetes.list   # helps tools such as command-not-found to work correctly
+   ```
+   -->
+   ```shell
+   # 这会覆盖 /etc/apt/sources.list.d/kubernetes.list 中的所有现存配置
+   echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/{{< param "version" >}}/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+   sudo chmod 644 /etc/apt/sources.list.d/kubernetes.list   # 有助于让诸如 command-not-found 等工具正常工作
    ```
 
+{{< note >}}
 <!--
-3. Add the Kubernetes `apt` repository:
+To upgrade kubectl to another minor release, you'll need to bump the version in `/etc/apt/sources.list.d/kubernetes.list` before running `apt-get update` and `apt-get upgrade`. This procedure is described in more detail in [Changing The Kubernetes Package Repository](/docs/tasks/administer-cluster/kubeadm/change-package-repository/).
 -->
-
-3. 添加 Kubernetes `apt` 仓库：
-
-   ```shell
-   echo "deb [signed-by=/etc/apt/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
-   ```
+要将 kubectl 升级到别的次要版本，你需要先升级 `/etc/apt/sources.list.d/kubernetes.list` 中的版本，
+再运行 `apt-get update` 和 `apt-get upgrade` 命令。
+更详细的步骤可以在[更改 Kubernetes 软件包存储库](/zh-cn/docs/tasks/administer-cluster/kubeadm/change-package-repository/)中找到。
+{{< /note >}}
 
 <!--
-4. Update `apt` package index with the new repository and install kubectl:
+4. Update `apt` package index, then install kubectl:
 -->
-
-4. 更新 `apt` 包索引，使之包含新的仓库并安装 kubectl：
+4. 更新 `apt` 包索引，然后安装 kubectl：
 
    ```shell
    sudo apt-get update
    sudo apt-get install -y kubectl
    ```
 
-{{< note >}}
-<!--
-In releases older than Debian 12 and Ubuntu 22.04, `/etc/apt/keyrings` does not exist by default.
-You can create this directory if you need to, making it world-readable but writeable only by admins.
--->
-在低于 Debian 12 和 Ubuntu 22.04 的发行版本中，`/etc/apt/keyrings` 默认不存在。
-如有需要，你可以创建此目录，并将其设置为对所有人可读，但仅对管理员可写。
-{{< /note >}}
-
 {{% /tab %}}
 
 {{% tab name="基于 Red Hat 的发行版" %}}
 
-```bash
-cat <<EOF | sudo tee /etc/yum.repos.d/kubernetes.repo
-[kubernetes]
-name=Kubernetes
-baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-\$basearch
-enabled=1
-gpgcheck=1
-gpgkey=https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
-EOF
-sudo yum install -y kubectl
-```
+<!--
+1. Add the Kubernetes `yum` repository. If you want to use Kubernetes version
+   different than {{< param "version" >}}, replace {{< param "version" >}} with
+   the desired minor version in the command below.
+-->
+1. 添加 Kubernetes 的 `yum` 仓库。如果你想使用 {{< param "version" >}} 之外的 Kubernetes 版本，
+   将下面命令中的 {{< param "version" >}} 替换为所需的次要版本。
+
+   <!--
+   ```bash
+   # This overwrites any existing configuration in /etc/yum.repos.d/kubernetes.repo
+   cat <<EOF | sudo tee /etc/yum.repos.d/kubernetes.repo
+   [kubernetes]
+   name=Kubernetes
+   baseurl=https://pkgs.k8s.io/core:/stable:/{{< param "version" >}}/rpm/
+   enabled=1
+   gpgcheck=1
+   gpgkey=https://pkgs.k8s.io/core:/stable:/{{< param "version" >}}/rpm/repodata/repomd.xml.key
+   EOF
+   ```
+   -->
+   ```bash
+   # 这会覆盖 /etc/yum.repos.d/kubernetes.repo 中现存的所有配置
+   cat <<EOF | sudo tee /etc/yum.repos.d/kubernetes.repo
+   [kubernetes]
+   name=Kubernetes
+   baseurl=https://pkgs.k8s.io/core:/stable:/{{< param "version" >}}/rpm/
+   enabled=1
+   gpgcheck=1
+   gpgkey=https://pkgs.k8s.io/core:/stable:/{{< param "version" >}}/rpm/repodata/repomd.xml.key
+   EOF
+   ```
+
+{{< note >}}
+<!--
+To upgrade kubectl to another minor release, you'll need to bump the version in `/etc/yum.repos.d/kubernetes.repo` before running `yum update`. This procedure is described in more detail in [Changing The Kubernetes Package Repository](/docs/tasks/administer-cluster/kubeadm/change-package-repository/).
+-->
+要将 kubectl 升级到别的次要版本，你需要先升级 `/etc/yum.repos.d/kubernetes.repo`
+中的版本，再运行 `yum update` 命令。
+更详细的步骤可以在[更改 Kubernetes 软件包存储库](/zh-cn/docs/tasks/administer-cluster/kubeadm/change-package-repository/)中找到。
+{{< /note >}}
+
+<!--
+2. Install kubectl using `yum`:
+-->
+2. 使用 `yum` 安装 kubectl：
+
+   ```bash
+   sudo yum install -y kubectl
+   ```
 
 {{% /tab %}}
+
+{{% tab name="基于 SUSE 的发行版" %}}
+<!-- 
+1. Add the Kubernetes `zypper` repository. If you want to use Kubernetes version
+different than {{< param "version" >}}, replace {{< param "version" >}} with
+the desired minor version in the command below.
+-->
+
+1. 添加 Kubernetes `zypper` 软件源。如果你想使用不同于 {{< param "version" >}}
+   的 Kubernetes 版本，请在下面的命令中将 {{< param "version" >}} 替换为所需的次要版本。
+
+<!-- 
+```bash
+# This overwrites any existing configuration in /etc/zypp/repos.d/kubernetes.repo
+cat <<EOF | sudo tee /etc/zypp/repos.d/kubernetes.repo
+[kubernetes]
+name=Kubernetes
+baseurl=https://pkgs.k8s.io/core:/stable:/{{< param "version" >}}/rpm/
+enabled=1
+gpgcheck=1
+gpgkey=https://pkgs.k8s.io/core:/stable:/{{< param "version" >}}/rpm/repodata/repomd.xml.key
+EOF
+```
+-->
+```bash
+# 这将覆盖 /etc/zypp/repos.d/kubernetes.repo 中的任何现有配置。
+cat <<EOF | sudo tee /etc/zypp/repos.d/kubernetes.repo
+[kubernetes]
+name=Kubernetes
+baseurl=https://pkgs.k8s.io/core:/stable:/{{< param "version" >}}/rpm/
+enabled=1
+gpgcheck=1
+gpgkey=https://pkgs.k8s.io/core:/stable:/{{< param "version" >}}/rpm/repodata/repomd.xml.key
+EOF
+```
+{{< note >}}
+<!--
+To upgrade kubectl to another minor release, you'll need to bump the version in `/etc/zypp/repos.d/kubernetes.repo` before running `zypper update`. This procedure is described in more detail in
+[Changing The Kubernetes Package Repository](/docs/tasks/administer-cluster/kubeadm/change-package-repository/).
+-->
+要升级 kubectl 到另一个小版本，你需要先更新 `/etc/zypp/repos.d/kubernetes.repo` 的版本，
+再运行 `zypper update`。
+此过程在[更改 Kubernetes 软件包仓库](/zh-cn/docs/tasks/administer-cluster/kubeadm/change-package-repository/)中有更详细的描述。
+{{< /note >}}
+
+<!--
+2. Update `zypper` and confirm the new repo addition:
+-->
+2. 更新 zypper 并确认新的仓库已添加：
+
+   ```bash
+   sudo zypper update
+   ```
+
+   <!--
+   When this message appears, press 't' or 'a':
+   -->
+   出现此信息时，按 't' 或 'a''：
+
+   ```
+   New repository or package signing key received:
+
+   Repository:       Kubernetes
+   Key Fingerprint:  1111 2222 3333 4444 5555 6666 7777 8888 9999 AAAA
+   Key Name:         isv:kubernetes OBS Project <isv:kubernetes@build.opensuse.org>
+   Key Algorithm:    RSA 2048
+   Key Created:      Thu 25 Aug 2022 01:21:11 PM -03
+   Key Expires:      Sat 02 Nov 2024 01:21:11 PM -03 (expires in 85 days)
+   Rpm Name:         gpg-pubkey-9a296436-6307a177
+
+   Note: Signing data enables the recipient to verify that no modifications occurred after the data
+   were signed. Accepting data with no, wrong or unknown signature can lead to a corrupted system
+   and in extreme cases even to a system compromise.
+
+   Note: A GPG pubkey is clearly identified by its fingerprint. Do not rely on the key's name. If
+   you are not sure whether the presented key is authentic, ask the repository provider or check
+   their web site. Many providers maintain a web page showing the fingerprints of the GPG keys they
+   are using.
+
+   Do you want to reject the key, trust temporarily, or trust always? [r/t/a/?] (r): a
+   ```
+
+<!--
+3. Install kubectl using `zypper`:
+-->
+3. 使用 `zypper` 安装 kubectl：
+
+   ```bash
+   sudo zypper install -y kubectl
+   ```
+
+{{% /tab %}}
+
 {{< /tabs >}}
 
 <!--
@@ -303,7 +436,7 @@ sudo yum install -y kubectl
 
 {{< tabs name="other_kubectl_install" >}}
 {{% tab name="Snap" %}}
-<!-- 
+<!--
 If you are on Ubuntu or another Linux distribution that supports the
 [snap](https://snapcraft.io/docs/core/install) package manager, kubectl
 is available as a [snap](https://snapcraft.io/) application.
@@ -320,7 +453,7 @@ kubectl version --client
 {{% /tab %}}
 
 {{% tab name="Homebrew" %}}
-<!-- 
+<!--
 If you are on Linux and using [Homebrew](https://docs.brew.sh/Homebrew-on-Linux)
 package manager, kubectl is available for [installation](https://docs.brew.sh/Homebrew-on-Linux#install).
 -->
@@ -340,7 +473,7 @@ kubectl version --client
 <!--
 ## Verify kubectl configuration
 -->
-## 验证 kubectl 配置 {#verify-kubectl-configration}
+## 验证 kubectl 配置 {#verify-kubectl-configuration}
 
 {{< include "included/verify-kubectl.md" >}}
 
@@ -372,7 +505,7 @@ kubectl 为 Bash、Zsh、Fish 和 PowerShell 提供自动补全功能，可以�
 <!--
 ### Install `kubectl convert` plugin
 -->
-### 安装 `kubectl convert` 插件
+### 安装 `kubectl convert` 插件 {#install-kubectl-convert-plugin}
 
 {{< include "included/kubectl-convert-overview.md" >}}
 
@@ -381,12 +514,12 @@ kubectl 为 Bash、Zsh、Fish 和 PowerShell 提供自动补全功能，可以�
 -->
 1. 用以下命令下载最新发行版：
 
-   {{< tabs name="download_binary_linux" >}}
+   {{< tabs name="download_convert_binary_linux" >}}
    {{< tab name="x86-64" codelang="bash" >}}
    curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl-convert"
    {{< /tab >}}
    {{< tab name="ARM64" codelang="bash" >}}
-   curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/arm64/kubectl"
+   curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/arm64/kubectl-convert"
    {{< /tab >}}
    {{< /tabs >}}
 
@@ -401,10 +534,10 @@ kubectl 为 Bash、Zsh、Fish 和 PowerShell 提供自动补全功能，可以�
 
    {{< tabs name="download_convert_checksum_linux" >}}
    {{< tab name="x86-64" codelang="bash" >}}
-   curl -LO "https://dl.k8s.io/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl-convert.sha256"
+   curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl-convert.sha256"
    {{< /tab >}}
    {{< tab name="ARM64" codelang="bash" >}}
-   curl -LO "https://dl.k8s.io/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/arm64/kubectl-convert.sha256"
+   curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/arm64/kubectl-convert.sha256"
    {{< /tab >}}
    {{< /tabs >}}
 
@@ -431,7 +564,7 @@ kubectl 为 Bash、Zsh、Fish 和 PowerShell 提供自动补全功能，可以�
    -->
    验证失败时，`sha256` 将以非零值退出，并打印输出类似于：
 
-   ```bash
+   ```console
    kubectl-convert: FAILED
    sha256sum: WARNING: 1 computed checksum did NOT match
    ```

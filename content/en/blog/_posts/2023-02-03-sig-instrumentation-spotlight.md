@@ -4,9 +4,9 @@ title: "Spotlight on SIG Instrumentation"
 slug: sig-instrumentation-spotlight-2023
 date: 2023-02-03
 canonicalUrl: https://www.kubernetes.dev/blog/2023/02/03/sig-instrumentation-spotlight-2023/
+author: >
+  Imran Noor Mohamed (Delivery Hero)
 ---
-
-**Author:** Imran Noor Mohamed (Delivery Hero)
 
 Observability requires the right data at the right time for the right consumer
 (human or piece of software) to make the right decision. In the context of Kubernetes,
@@ -92,7 +92,7 @@ we can see that there are a relevant number of metrics, logs, and tracing
 [KEPs](https://www.k8s.dev/resources/keps/) in the pipeline. Would you like to
 point out important things for last release (maybe alpha & stable milestone candidates?)
 
-**Han (HK)**: We can now generate [documentation](https://kubernetes.io/docs/reference/instrumentation/metrics/)
+**Han (HK)**: We can now generate [documentation](/docs/reference/instrumentation/metrics/)
 for every single metric in the main Kubernetes code base! We have a pretty fancy
 static analysis pipeline that enables this functionality. We’ve also added feature
 metrics so that you can look at your metrics to determine which features are enabled

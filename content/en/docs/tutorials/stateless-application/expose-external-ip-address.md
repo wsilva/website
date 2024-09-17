@@ -31,7 +31,7 @@ external IP address.
 
 1. Run a Hello World application in your cluster:
 
-   {{< codenew file="service/load-balancer-example.yaml" >}}
+   {{% code_sample file="service/load-balancer-example.yaml" %}}
 
    ```shell
    kubectl apply -f https://k8s.io/examples/service/load-balancer-example.yaml
@@ -154,7 +154,9 @@ external IP address.
    The response to a successful request is a hello message:
 
    ```shell
-   Hello Kubernetes!
+   Hello, world!
+   Version: 2.0.0
+   Hostname: 0bd46b45f32f
    ```
 
 ## {{% heading "cleanup" %}}

@@ -15,7 +15,7 @@ weight: 30
 
 ## 동기 부여
 
-_오퍼레이터 패턴_은 서비스 또는 서비스 셋을 관리하는 운영자의
+_오퍼레이터 패턴_ 은 서비스 또는 서비스 셋을 관리하는 운영자의
 주요 목표를 포착하는 것을 목표로 한다. 특정 애플리케이션 및
 서비스를 돌보는 운영자는 시스템의 작동 방식, 배포 방법 및 문제가 있는 경우
 대처 방법에 대해 깊이 알고 있다.
@@ -31,9 +31,11 @@ _오퍼레이터 패턴_은 서비스 또는 서비스 셋을 관리하는 운�
 및 실행을 자동화할 수 있고, *또한* 쿠버네티스가 수행하는 방식을
 자동화할 수 있다.
 
-쿠버네티스의 {{< glossary_tooltip text="오퍼레이터 패턴" term_id="operator-pattern" >}} 개념을 통해 쿠버네티스 코드 자체를 수정하지 않고도 {{< glossary_tooltip text="컨트롤러" term_id="controller" >}}를 하나 이상의 사용자 정의 리소스(custom resource)에 연결하여 클러스터의 동작을 확장할 수 있다.
+쿠버네티스의 {{< glossary_tooltip text="오퍼레이터 패턴" term_id="operator-pattern" >}} 
+개념을 통해 쿠버네티스 코드 자체를 수정하지 않고도 {{< glossary_tooltip text="컨트롤러" term_id="controller" >}}를 
+하나 이상의 사용자 정의 리소스(custom resource)에 연결하여 클러스터의 동작을 확장할 수 있다.
 오퍼레이터는 [사용자 정의 리소스](/ko/docs/concepts/extend-kubernetes/api-extension/custom-resources/)의
-컨트롤러 역할을 하는 쿠버네티스 API의 클라이언트이다.
+컨트롤러 역할을 하는 쿠버네티스 API의 클라이언트다.
 
 ## 오퍼레이터 예시 {#example}
 
@@ -116,7 +118,6 @@ kubectl edit SampleDB/example-database # 일부 설정을 수동으로 변경하
 * [kube-rs](https://kube.rs/) (Rust)
 * [kubebuilder](https://book.kubebuilder.io/) 사용하기
 * [KubeOps](https://buehler.github.io/dotnet-operator-sdk/) (.NET 오퍼레이터 SDK)
-* [KUDO](https://kudo.dev/) (Kubernetes Universal Declarative Operator)
 * 웹훅(WebHook)과 함께 [Metacontroller](https://metacontroller.github.io/metacontroller/intro.html)를
   사용하여 직접 구현하기
 * [오퍼레이터 프레임워크](https://operatorframework.io)

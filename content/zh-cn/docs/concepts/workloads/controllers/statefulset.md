@@ -1,7 +1,14 @@
 ---
 title: StatefulSet
+api_metadata:
+- apiVersion: "apps/v1"
+  kind: "StatefulSet"
 content_type: concept
+description: >-
+  StatefulSet 运行一组 Pod，并为每个 Pod 保留一个稳定的标识。
+  这可用于管理需要持久化存储或稳定、唯一网络标识的应用。
 weight: 30
+hide_summary: true # 在章节索引中单独列出
 ---
 <!--
 reviewers:
@@ -12,8 +19,15 @@ reviewers:
 - kow3ns
 - smarterclayton
 title: StatefulSets
+api_metadata:
+- apiVersion: "apps/v1"
+  kind: "StatefulSet"
 content_type: concept
+description: >-
+  A StatefulSet runs a group of Pods, and maintains a sticky identity for each of those Pods. This is useful for managing
+  applications that need persistent storage or a stable, unique network identity.
 weight: 30
+hide_summary: true # Listed separately in section index
 -->
 
 <!-- overview -->
@@ -70,8 +84,8 @@ that provides a set of stateless replicas.
 
 <!--
 * The storage for a given Pod must either be provisioned by a
-  [PersistentVolume Provisioner](https://github.com/kubernetes/examples/tree/master/staging/persistent-volume-provisioning/README.md)
-  based on the requested `storage class`, or pre-provisioned by an admin.
+  [PersistentVolume Provisioner](/docs/concepts/storage/dynamic-provisioning/) ([examples here](https://github.com/kubernetes/examples/tree/master/staging/persistent-volume-provisioning/README.md))
+  based on the requested _storage class_, or pre-provisioned by an admin.
 * Deleting and/or scaling a StatefulSet down will *not* delete the volumes associated with the
   StatefulSet. This is done to ensure data safety, which is generally more valuable than an
   automatic purge of all related StatefulSet resources.
@@ -87,8 +101,9 @@ that provides a set of stateless replicas.
   [manual intervention to repair](#forced-rollback).
 -->
 * 给定 Pod 的存储必须由
-  [PersistentVolume Provisioner](https://github.com/kubernetes/examples/tree/master/staging/persistent-volume-provisioning/README.md)
-  基于所请求的 `storage class` 来制备，或者由管理员预先制备。
+  [PersistentVolume Provisioner](/zh-cn/docs/concepts/storage/dynamic-provisioning/)
+  （[例子在这里](https://github.com/kubernetes/examples/tree/master/staging/persistent-volume-provisioning/README.md)）
+  基于所请求的 **storage class** 来制备，或者由管理员预先制备。
 * 删除或者扩缩 StatefulSet 并**不会**删除它关联的存储卷。
   这样做是为了保证数据安全，它通常比自动清除 StatefulSet 所有相关的资源更有价值。
 * StatefulSet 当前需要[无头服务](/zh-cn/docs/concepts/services-networking/service/#headless-services)来负责 Pod
@@ -141,7 +156,7 @@ spec:
       terminationGracePeriodSeconds: 10
       containers:
       - name: nginx
-        image: registry.k8s.io/nginx-slim:0.8
+        image: registry.k8s.io/nginx-slim:0.24
         ports:
         - containerPort: 80
           name: web
@@ -158,6 +173,16 @@ spec:
         requests:
           storage: 1Gi
 ```
+
+{{< note >}}
+<!--
+This example uses the `ReadWriteOnce` access mode, for simplicity. For
+production use, the Kubernetes project recommends using the `ReadWriteOncePod`
+access mode instead.
+-->
+这个示例出于简化考虑使用了 `ReadWriteOnce` 访问模式。但对于生产环境，
+Kubernetes 项目建议使用 `ReadWriteOncePod` 访问模式。
+{{< /note >}}
 
 <!--
 In the above example:
@@ -198,15 +223,24 @@ validation error during StatefulSet creation.
 <!--
 ### Volume Claim Templates
 
-You can set the `.spec.volumeClaimTemplates` which can provide stable storage using
-[PersistentVolumes](/docs/concepts/storage/persistent-volumes/) provisioned by a PersistentVolume
-Provisioner.
+You can set the `.spec.volumeClaimTemplates` field to create a
+[PersistentVolumeClaim](/docs/concepts/storage/persistent-volumes/).
+This will provide stable storage to the StatefulSet if either
 -->
 ### 卷申领模板  {#volume-claim-templates}
 
-你可以设置 `.spec.volumeClaimTemplates`，
-它可以使用 PersistentVolume 制备程序所准备的
-[PersistentVolumes](/zh-cn/docs/concepts/storage/persistent-volumes/) 来提供稳定的存储。
+你可以设置 `.spec.volumeClaimTemplates` 字段来创建
+[PersistentVolumeClaim](/zh-cn/docs/concepts/storage/persistent-volumes/)。
+这将为 StatefulSet 提供稳定的存储，如果：
+
+<!--
+* The StorageClass specified for the volume claim is set up to use [dynamic
+  provisioning](/docs/concepts/storage/dynamic-provisioning/), or
+* The cluster already contains a PersistentVolume with the correct StorageClass
+  and sufficient available storage space.
+-->
+* 为卷申领指定的 StorageClass 配置使用[动态制备](/zh-cn/docs/concepts/storage/dynamic-provisioning/)，或
+* 集群已包含具有正确 StorageClass 和足够可用存储空间的 PersistentVolume。
 
 <!--
 ### Minimum ready seconds
@@ -246,31 +280,29 @@ StatefulSet Pod 具有唯一的标识，该标识包括顺序标识、稳定的�
 
 For a StatefulSet with N [replicas](#replicas), each Pod in the StatefulSet
 will be assigned an integer ordinal, that is unique over the Set. By default,
-pods will be assigned ordinals from 0 up through N-1.
+pods will be assigned ordinals from 0 up through N-1. The StatefulSet controller
+will also add a pod label with this index: `apps.kubernetes.io/pod-index`.
 -->
-### 有序索引   {#ordinal-index}
+### 序号索引   {#ordinal-index}
 
 对于具有 N 个[副本](#replicas)的 StatefulSet，该 StatefulSet 中的每个 Pod 将被分配一个整数序号，
-该序号在此 StatefulSet 上是唯一的。默认情况下，这些 Pod 将被从 0 到 N-1 的序号。
+该序号在此 StatefulSet 中是唯一的。默认情况下，这些 Pod 将被赋予从 0 到 N-1 的序号。
+StatefulSet 的控制器也会添加一个包含此索引的 Pod 标签：`apps.kubernetes.io/pod-index`。
 
 <!--
 ### Start ordinal
 -->
 ### 起始序号   {#start-ordinal}
 
-{{< feature-state for_k8s_version="v1.27" state="beta" >}}
+{{< feature-state feature_gate_name="StatefulSetStartOrdinal" >}}
 
 <!--
 `.spec.ordinals` is an optional field that allows you to configure the integer
-ordinals assigned to each Pod. It defaults to nil. You must enable the
-`StatefulSetStartOrdinal`
-[feature gate](/docs/reference/command-line-tools-reference/feature-gates/) to
-use this field. Once enabled, you can configure the following options:
+ordinals assigned to each Pod. It defaults to nil. Within the field, you can
+configure the following options:
 -->
 `.spec.ordinals` 是一个可选的字段，允许你配置分配给每个 Pod 的整数序号。
-该字段默认为 nil 值。你必须启用 `StatefulSetStartOrdinal`
-[特性门控](/zh-cn/docs/reference/command-line-tools-reference/feature-gates/)才能使用此字段。
-一旦启用，你就可以配置以下选项：
+该字段默认为 nil 值。在该字段内，你可以配置以下选项：
 
 <!--
 * `.spec.ordinals.start`: If the `.spec.ordinals.start` field is set, Pods will
@@ -368,7 +400,7 @@ Cluster Domain will be set to `cluster.local` unless
 
 For each VolumeClaimTemplate entry defined in a StatefulSet, each Pod receives one
 PersistentVolumeClaim. In the nginx example above, each Pod receives a single PersistentVolume
-with a StorageClass of `my-storage-class` and 1 Gib of provisioned storage. If no StorageClass
+with a StorageClass of `my-storage-class` and 1 GiB of provisioned storage. If no StorageClass
 is specified, then the default StorageClass will be used. When a Pod is (re)scheduled
 onto a node, its `volumeMounts` mount the PersistentVolumes associated with its
 PersistentVolume Claims. Note that, the PersistentVolumes associated with the
@@ -379,8 +411,7 @@ This must be done manually.
 
 对于 StatefulSet 中定义的每个 VolumeClaimTemplate，每个 Pod 接收到一个 PersistentVolumeClaim。
 在上面的 nginx 示例中，每个 Pod 将会得到基于 StorageClass `my-storage-class` 制备的
-1 Gib 的 PersistentVolume。
-如果没有声明 StorageClass，就会使用默认的 StorageClass。
+1 GiB 的 PersistentVolume。如果没有指定 StorageClass，就会使用默认的 StorageClass。
 当一个 Pod 被调度（重新调度）到节点上时，它的 `volumeMounts` 会挂载与其
 PersistentVolumeClaims 相关联的 PersistentVolume。
 请注意，当 Pod 或者 StatefulSet 被删除时，与 PersistentVolumeClaims 相关联的
@@ -399,6 +430,25 @@ the StatefulSet.
 当 StatefulSet {{<glossary_tooltip text="控制器" term_id="controller">}}创建 Pod 时，
 它会添加一个标签 `statefulset.kubernetes.io/pod-name`，该标签值设置为 Pod 名称。
 这个标签允许你给 StatefulSet 中的特定 Pod 绑定一个 Service。
+
+<!--
+### Pod index label
+-->
+### Pod 索引标签  {#pod-index-label}
+
+{{< feature-state for_k8s_version="v1.28" state="beta" >}}
+
+<!--
+When the StatefulSet {{<glossary_tooltip text="controller" term_id="controller">}} creates a Pod,
+the new Pod is labelled with `apps.kubernetes.io/pod-index`. The value of this label is the ordinal index of
+the Pod. This label allows you to route traffic to a particular pod index, filter logs/metrics
+using the pod index label, and more. Note the feature gate `PodIndexLabel` must be enabled for this
+feature, and it is enabled by default.
+-->
+当 StatefulSet {{<glossary_tooltip text="控制器" term_id="controller">}}创建一个 Pod 时，
+新的 Pod 会被打上 `apps.kubernetes.io/pod-index` 标签。标签的取值为 Pod 的序号索引。
+此标签使你能够将流量路由到特定索引值的 Pod、使用 Pod 索引标签来过滤日志或度量值等等。
+注意要使用这一特性需要启用特性门控 `PodIndexLabel`，而该门控默认是被启用的。
 
 <!--
 ## Deployment and Scaling Guarantees

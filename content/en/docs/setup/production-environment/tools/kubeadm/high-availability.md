@@ -173,7 +173,7 @@ option. Your cluster requirements may need a different configuration.
 
    {{< note >}}
    The `kubeadm init` flags `--config` and `--certificate-key` cannot be mixed, therefore if you want
-   to use the [kubeadm configuration](/docs/reference/config-api/kubeadm-config.v1beta3/)
+   to use the [kubeadm configuration](/docs/reference/config-api/kubeadm-config.v1beta4/)
    you must add the `certificateKey` field in the appropriate config locations
    (under `InitConfiguration` and `JoinConfiguration: controlPlane`).
    {{< /note >}}
@@ -218,8 +218,10 @@ option. Your cluster requirements may need a different configuration.
      kubeadm certs certificate-key
      ```
 
+   The certificate key is a hex encoded string that is an AES key of size 32 bytes.
+
    {{< note >}}
-   The `kubeadm-certs` Secret and decryption key expire after two hours.
+   The `kubeadm-certs` Secret and the decryption key expire after two hours.
    {{< /note >}}
 
    {{< caution >}}
@@ -289,7 +291,7 @@ in the kubeadm config file.
 
    ```yaml
    ---
-   apiVersion: kubeadm.k8s.io/v1beta3
+   apiVersion: kubeadm.k8s.io/v1beta4
    kind: ClusterConfiguration
    kubernetesVersion: stable
    controlPlaneEndpoint: "LOAD_BALANCER_DNS:LOAD_BALANCER_PORT" # change this (see below)

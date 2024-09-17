@@ -7,8 +7,15 @@ reviewers:
 - kow3ns
 - smarterclayton
 title: StatefulSets
+api_metadata:
+- apiVersion: "apps/v1"
+  kind: "StatefulSet"
 content_type: concept
+description: >-
+  A StatefulSet runs a group of Pods, and maintains a sticky identity for each of those Pods. This is useful for managing
+  applications that need persistent storage or a stable, unique network identity.
 weight: 30
+hide_summary: true # Listed separately in section index
 ---
 
 <!-- overview -->
@@ -40,8 +47,8 @@ that provides a set of stateless replicas.
 ## Limitations
 
 * The storage for a given Pod must either be provisioned by a
-  [PersistentVolume Provisioner](https://github.com/kubernetes/examples/tree/master/staging/persistent-volume-provisioning/README.md)
-  based on the requested `storage class`, or pre-provisioned by an admin.
+  [PersistentVolume Provisioner](/docs/concepts/storage/dynamic-provisioning/) ([examples here](https://github.com/kubernetes/examples/tree/master/staging/persistent-volume-provisioning/README.md))
+  based on the requested _storage class_, or pre-provisioned by an admin.
 * Deleting and/or scaling a StatefulSet down will *not* delete the volumes associated with the
   StatefulSet. This is done to ensure data safety, which is generally more valuable than an
   automatic purge of all related StatefulSet resources.
@@ -94,7 +101,7 @@ spec:
       terminationGracePeriodSeconds: 10
       containers:
       - name: nginx
-        image: registry.k8s.io/nginx-slim:0.8
+        image: registry.k8s.io/nginx-slim:0.24
         ports:
         - containerPort: 80
           name: web
@@ -111,6 +118,12 @@ spec:
         requests:
           storage: 1Gi
 ```
+
+{{< note >}}
+This example uses the `ReadWriteOnce` access mode, for simplicity. For
+production use, the Kubernetes project recommends using the `ReadWriteOncePod`
+access mode instead.
+{{< /note >}}
 
 In the above example:
 
@@ -131,10 +144,14 @@ validation error during StatefulSet creation.
 
 ### Volume Claim Templates
 
-You can set the `.spec.volumeClaimTemplates` which can provide stable storage using
-[PersistentVolumes](/docs/concepts/storage/persistent-volumes/) provisioned by a PersistentVolume
-Provisioner.
+You can set the `.spec.volumeClaimTemplates` field to create a
+[PersistentVolumeClaim](/docs/concepts/storage/persistent-volumes/). 
+This will provide stable storage to the StatefulSet if either
 
+* The StorageClass specified for the volume claim is set up to use [dynamic
+  provisioning](/docs/concepts/storage/dynamic-provisioning/), or
+* The cluster already contains a PersistentVolume with the correct StorageClass
+  and sufficient available storage space.
 
 ### Minimum ready seconds
 
@@ -156,17 +173,16 @@ regardless of which node it's (re)scheduled on.
 
 For a StatefulSet with N [replicas](#replicas), each Pod in the StatefulSet
 will be assigned an integer ordinal, that is unique over the Set. By default,
-pods will be assigned ordinals from 0 up through N-1.
+pods will be assigned ordinals from 0 up through N-1. The StatefulSet controller
+will also add a pod label with this index: `apps.kubernetes.io/pod-index`.
 
 ### Start ordinal
 
-{{< feature-state for_k8s_version="v1.27" state="beta" >}}
+{{< feature-state feature_gate_name="StatefulSetStartOrdinal" >}}
 
 `.spec.ordinals` is an optional field that allows you to configure the integer
-ordinals assigned to each Pod. It defaults to nil. You must enable the
-`StatefulSetStartOrdinal`
-[feature gate](/docs/reference/command-line-tools-reference/feature-gates/) to
-use this field. Once enabled, you can configure the following options:
+ordinals assigned to each Pod. It defaults to nil. Within the field, you can
+configure the following options:
 
 * `.spec.ordinals.start`: If the `.spec.ordinals.start` field is set, Pods will
   be assigned ordinals from `.spec.ordinals.start` up through
@@ -220,7 +236,7 @@ Cluster Domain will be set to `cluster.local` unless
 
 For each VolumeClaimTemplate entry defined in a StatefulSet, each Pod receives one
 PersistentVolumeClaim. In the nginx example above, each Pod receives a single PersistentVolume
-with a StorageClass of `my-storage-class` and 1 Gib of provisioned storage. If no StorageClass
+with a StorageClass of `my-storage-class` and 1 GiB of provisioned storage. If no StorageClass
 is specified, then the default StorageClass will be used. When a Pod is (re)scheduled
 onto a node, its `volumeMounts` mount the PersistentVolumes associated with its
 PersistentVolume Claims. Note that, the PersistentVolumes associated with the
@@ -233,6 +249,16 @@ When the StatefulSet {{<glossary_tooltip text="controller" term_id="controller">
 it adds a label, `statefulset.kubernetes.io/pod-name`, that is set to the name of
 the Pod. This label allows you to attach a Service to a specific Pod in
 the StatefulSet.
+
+### Pod index label
+
+{{< feature-state for_k8s_version="v1.28" state="beta" >}}
+
+When the StatefulSet {{<glossary_tooltip text="controller" term_id="controller">}} creates a Pod,
+the new Pod is labelled with `apps.kubernetes.io/pod-index`. The value of this label is the ordinal index of
+the Pod. This label allows you to route traffic to a particular pod index, filter logs/metrics
+using the pod index label, and more. Note the feature gate `PodIndexLabel` must be enabled for this
+feature, and it is enabled by default.
 
 ## Deployment and Scaling Guarantees
 
@@ -468,4 +494,3 @@ the `.spec.replicas` field automatically.
   object definition to understand the API for stateful sets.
 * Read about [PodDisruptionBudget](/docs/concepts/workloads/pods/disruptions/) and how
   you can use it to manage application availability during disruptions.
-

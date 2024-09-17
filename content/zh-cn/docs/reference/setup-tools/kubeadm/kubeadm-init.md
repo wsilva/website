@@ -4,15 +4,6 @@ content_type: concept
 weight: 20
 ---
 
-<!--
-reviewers:
-- luxas
-- jbeda
-title: kubeadm init
-content_type: concept
-weight: 20
--->
-
 <!-- overview -->
 
 <!--
@@ -22,7 +13,7 @@ This command initializes a Kubernetes control-plane node.
 
 <!-- body -->
 
-{{< include "generated/kubeadm_init.md" >}}
+{{< include "generated/kubeadm_init/_index.md" >}}
 
 <!--
 ### Init workflow {#init-workflow}
@@ -57,14 +48,14 @@ following steps:
    APIServer 证书将为任何 `--apiserver-cert-extra-sans` 参数值提供附加的 SAN 条目，必要时将其小写。
 
 <!--
-1. Writes kubeconfig files in `/etc/kubernetes/`  for
-   the kubelet, the controller-manager and the scheduler to use to connect to the
-   API server, each with its own identity, as well as an additional
-   kubeconfig file for administration named `admin.conf`.
+1. Writes kubeconfig files in `/etc/kubernetes/` for the kubelet, the controller-manager and the
+   scheduler to use to connect to the API server, each with its own identity. Also
+   additional kubeconfig files are written, for kubeadm as administrative entity (`admin.conf`)
+   and for a super admin user that can bypass RBAC (`super-admin.conf`).
 -->
 3. 将 kubeconfig 文件写入 `/etc/kubernetes/` 目录以便 kubelet、控制器管理器和调度器用来连接到
-   API 服务器，它们每一个都有自己的身份标识，同时生成一个名为 `admin.conf` 的独立的 kubeconfig
-   文件，用于管理操作。
+   API 服务器，它们每一个都有自己的身份标识。再编写额外的 kubeconfig 文件，将 kubeadm
+   作为管理实体（`admin.conf`）和可以绕过 RBAC 的超级管理员用户（`super-admin.conf`）。
 
 <!--
 1. Generates static Pod manifests for the API server,
@@ -96,9 +87,9 @@ following steps:
    token via `--token`, as described in the
    [kubeadm token](/docs/reference/setup-tools/kubeadm/kubeadm-token/) docs.
 -->
-6. 生成令牌，将来其他节点可使用该令牌向控制平面注册自己。
-   如 [kubeadm token](/zh-cn/docs/reference/setup-tools/kubeadm/kubeadm-token/) 文档所述，
-   用户可以选择通过 `--token` 提供令牌。
+6. 生成令牌，将来其他节点可使用该令牌向控制平面注册自己。如
+   [kubeadm token](/zh-cn/docs/reference/setup-tools/kubeadm/kubeadm-token/)
+   文档所述，用户可以选择通过 `--token` 提供令牌。
 
 <!--
 1. Makes all the necessary configurations for allowing node joining with the
@@ -133,7 +124,7 @@ following steps:
    Please note that although the DNS server is deployed, it will not be scheduled until CNI is installed.
 -->
 8. 通过 API 服务器安装一个 DNS 服务器 (CoreDNS) 和 kube-proxy 附加组件。
-   在 Kubernetes 版本 1.11 和更高版本中，CoreDNS 是默认的 DNS 服务器。
+   在 Kubernetes v1.11 和更高版本中，CoreDNS 是默认的 DNS 服务器。
    请注意，尽管已部署 DNS 服务器，但直到安装 CNI 时才调度它。
 
    {{< warning >}}
@@ -148,13 +139,13 @@ following steps:
 
 Kubeadm allows you to create a control-plane node in phases using the `kubeadm init phase` command.
 -->
-
 ### 在 kubeadm 中使用 init 阶段 {#init-phases}
 
 Kubeadm 允许你使用 `kubeadm init phase` 命令分阶段创建控制平面节点。
 
 <!--
-To view the ordered list of phases and sub-phases you can call `kubeadm init -help`. The list will be located at the top of the help screen and each phase will have a description next to it.
+To view the ordered list of phases and sub-phases you can call `kubeadm init -help`. 
+The list will be located at the top of the help screen and each phase will have a description next to it.
 Note that by calling `kubeadm init` all of the phases and sub-phases will be executed in this exact order.
 -->
 要查看阶段和子阶段的有序列表，可以调用 `kubeadm init --help`。
@@ -228,7 +219,7 @@ Alternatively, you can use the `skipPhases` field under `InitConfiguration`.
 <!--
 The config file is still considered beta and may change in future versions.
 -->
-配置文件的功能仍然处于 alpha 状态并且在将来的版本中可能会改变。
+配置文件的功能仍然处于 Beta 状态并且在将来的版本中可能会改变。
 {{< /caution >}}
 
 <!--
@@ -252,16 +243,16 @@ If your configuration is not using the latest version it is **recommended** that
 the [kubeadm config migrate](/docs/reference/setup-tools/kubeadm/kubeadm-config/) command.
 
 For more information on the fields and usage of the configuration you can navigate to our
-[API reference page](/docs/reference/config-api/kubeadm-config.v1beta3/).
+[API reference page](/docs/reference/config-api/kubeadm-config.v1beta4/).
 -->
 可以使用 [kubeadm config print](/zh-cn/docs/reference/setup-tools/kubeadm/kubeadm-config/)
 命令打印出默认配置。
 
-如果你的配置没有使用最新版本，
-**推荐**使用 [kubeadm config migrate](/zh-cn/docs/reference/setup-tools/kubeadm/kubeadm-config/)
+如果你的配置没有使用最新版本，**推荐**使用
+[kubeadm config migrate](/zh-cn/docs/reference/setup-tools/kubeadm/kubeadm-config/)
 命令进行迁移。
 
-关于配置的字段和用法的更多信息，你可以访问 [API 参考页面](/zh-cn/docs/reference/config-api/kubeadm-config.v1beta3/)。
+关于配置的字段和用法的更多信息，你可以访问 [API 参考页面](/zh-cn/docs/reference/config-api/kubeadm-config.v1beta4/)。
 
 <!--
 ### Using kubeadm init with feature gates {#feature-gates}
@@ -279,12 +270,13 @@ Kubeadm 支持一组独有的特性门控，只能在 `kubeadm init` 创建集�
 <!--
 To pass a feature gate you can either use the `--feature-gates` flag for
 `kubeadm init`, or you can add items into the `featureGates` field when you pass
-a [configuration file](/docs/reference/config-api/kubeadm-config.v1beta3/#kubeadm-k8s-io-v1beta3-ClusterConfiguration)
+a [configuration file](/docs/reference/config-api/kubeadm-config.v1beta4/#kubeadm-k8s-io-v1beta4-ClusterConfiguration)
 using `--config`.
 -->
 你可以使用 `--feature-gates` 标志来为 `kubeadm init` 设置特性门控，
 或者你可以在用 `--config`
-传递[配置文件](/zh-cn/docs/reference/config-api/kubeadm-config.v1beta3/#kubeadm-k8s-io-v1beta3-ClusterConfiguration)时添加条目到 `featureGates` 字段中。
+传递[配置文件](/zh-cn/docs/reference/config-api/kubeadm-config.v1beta4/#kubeadm-k8s-io-v1beta4-ClusterConfiguration)时添加条目到
+`featureGates` 字段中。
 
 <!--
 Passing [feature gates for core Kubernetes components](/docs/reference/command-line-tools-reference/feature-gates)
@@ -299,12 +291,23 @@ List of feature gates:
 -->
 特性门控的列表：
 
+<!--
+{{< table caption="kubeadm feature gates" >}}
+Feature | Default | Alpha | Beta | GA
+:-------|:--------|:------|:-----|:----
+`ControlPlaneKubeletLocalMode` | `false` | 1.31 | - | -
+`EtcdLearnerMode` | `true` | 1.27 | 1.29 | -
+`PublicKeysECDSA` | `false` | 1.19 | - | -
+`WaitForAllControlPlaneComponents` | `false` | 1.30 | - | -
+{{< /table >}}
+-->
 {{< table caption="kubeadm 特性门控" >}}
 特性 | 默认值 | Alpha | Beta | GA
 :-------|:--------|:------|:-----|:----
+`ControlPlaneKubeletLocalMode` | `false` | 1.31 | - | -
+`EtcdLearnerMode` | `true` | 1.27 | 1.29 | -
 `PublicKeysECDSA` | `false` | 1.19 | - | -
-`RootlessControlPlane` | `false` | 1.22 | - | -
-`UnversionedKubeletConfigMap` | `true` | 1.22 | 1.23 | 1.25
+`WaitForAllControlPlaneComponents` | `false` | 1.30 | - | -
 {{< /table >}}
 
 {{< note >}}
@@ -320,15 +323,85 @@ Feature gate descriptions:
 特性门控的描述：
 
 <!--
+`ControlPlaneKubeletLocalMode`
+: With this feature gate enabled, when joining a new control plane node, kubeadm will configure the kubelet
+to connect to the local kube-apiserver. This ensures that there will not be a violation of the version skew
+policy during rolling upgrades.
+-->
+`ControlPlaneKubeletLocalMode`
+: 启用此特性门控后，当加入新的控制平面节点时，
+  kubeadm 将配置 kubelet 连接到本地 kube-apiserver。
+  这将确保在滚动升级期间不会违反版本偏差策略。
+
+<!--
+`EtcdLearnerMode`
+: With this feature gate enabled, when joining a new control plane node, a new etcd member will be created
+as a learner and promoted to a voting member only after the etcd data are fully aligned.
+-->
+`EtcdLearnerMode`
+: 启用此特性门控后，当加入新的控制平面节点时，将创建一个新的 etcd
+  成员作为学习者（learner），并仅在 etcd 数据完全对齐后进级为投票成员（voting member）。
+
+<!--
 `PublicKeysECDSA`
 : Can be used to create a cluster that uses ECDSA certificates instead of the default RSA algorithm.
 Renewal of existing ECDSA certificates is also supported using `kubeadm certs renew`, but you cannot
-switch between the RSA and ECDSA algorithms on the fly or during upgrades.
+switch between the RSA and ECDSA algorithms on the fly or during upgrades. Kubernetes
+{{< skew currentVersion >}} has a bug where keys in generated kubeconfig files are set use RSA
+despite the feature gate being enabled. Kubernetes versions before v1.31 had a bug where keys in generated kubeconfig files
+were set use RSA, even when you had enabled the `PublicKeysECDSA` feature gate.
 -->
 `PublicKeysECDSA`
 : 可用于创建集群时使用 ECDSA 证书而不是默认 RSA 算法。
-支持用 `kubeadm certs renew` 更新现有 ECDSA 证书，
-但你不能在集群运行期间或升级期间切换 RSA 和 ECDSA 算法。
+  支持用 `kubeadm certs renew` 更新现有 ECDSA 证书，
+  但你不能在集群运行期间或升级期间切换 RSA 和 ECDSA 算法。
+  Kubernetes {{< skew currentVersion >}} 有一个错误，尽管开启了特性门控，
+  所生成的 kubeconfig 文件中的密钥仍使用 RSA 设置。
+  在 v1.31 之前的 Kubernetes 版本中，即使启用了 `PublicKeysECDSA` 特性门控，
+  所生成的 kubeconfig 文件中的密钥仍然被设置为使用 RSA。
+
+<!--
+`WaitForAllControlPlaneComponents`
+: With this feature gate enabled kubeadm will wait for all control plane components (kube-apiserver,
+kube-controller-manager, kube-scheduler) on a control plane node to report status 200 on their `/healthz`
+endpoints. These checks are performed on `https://127.0.0.1:PORT/healthz`, where `PORT` is taken from
+`--secure-port` of a component. If you specify custom `--secure-port` values in the kubeadm configuration
+they will be respected. Without the feature gate enabled, kubeadm will only wait for the kube-apiserver
+on a control plane node to become ready. The wait process starts right after the kubelet on the host
+is started by kubeadm. You are advised to enable this feature gate in case you wish to observe a ready
+state from all control plane components during the `kubeadm init` or `kubeadm join` command execution.
+-->
+`WaitForAllControlPlaneComponents`
+: 启用此特性门控后，kubeadm 将等待控制平面节点上的所有控制平面组件
+  （kube-apiserver、kube-controller-manager、kube-scheduler）在其 `/healthz`
+  端点上报告 200 状态码。这些检测在 `https://127.0.0.1:PORT/healthz` 上执行，其中
+  `PORT` 取自组件的 `--secure-port` 标志。
+  如果没有启用此特性门控，kubeadm 将仅等待控制平面节点上的 kube-apiserver 准备就绪。
+  等待过程在 kubeadm 启动主机上的 kubelet 后立即开始。如果你希望在 `kubeadm init`
+  或 `kubeadm join` 命令执行期间观察所有控制平面组件的就绪状态，建议你启用此特性门控。
+
+<!--
+List of deprecated feature gates:
+-->
+已弃用特性门控的列表：
+
+<!--
+{{< table caption="kubeadm deprecated feature gates" >}}
+Feature | Default | Alpha | Beta | GA | Deprecated
+:-------|:--------|:------|:-----|:---|:----------
+`RootlessControlPlane` | `false` | 1.22 | - | - | 1.31
+{{< /table >}}
+-->
+{{< table caption="kubeadm 弃用的特性门控" >}}
+特性 | 默认值 | Alpha | Beta | GA |  弃用
+:-------|:--------|:------|:-----|:---|:----------
+`RootlessControlPlane` | `false` | 1.22 | - | - | 1.31
+{{< /table >}}
+
+<!--
+Feature gate descriptions:
+-->
+特性门控描述：
 
 <!--
 `RootlessControlPlane`
@@ -339,9 +412,45 @@ you upgrade to a newer version of Kubernetes.
 -->
 `RootlessControlPlane`
 : 设置此标志来配置 kubeadm 所部署的控制平面组件中的静态 Pod 容器
-`kube-apiserver`、`kube-controller-manager`、`kube-scheduler` 和 `etcd` 以非 root 用户身份运行。
-如果未设置该标志，则这些组件以 root 身份运行。
-你可以在升级到更新版本的 Kubernetes 之前更改此特性门控的值。
+  `kube-apiserver`、`kube-controller-manager`、`kube-scheduler` 和 `etcd`
+  以非 root 用户身份运行。如果未设置该标志，则这些组件以 root 身份运行。
+  你可以在升级到更新版本的 Kubernetes 之前更改此特性门控的值。
+
+<!--
+List of removed feature gates:
+-->
+已移除的特性门控列表：
+
+<!--
+{{< table caption="kubeadm removed feature gates" >}}
+Feature | Alpha | Beta | GA | Removed
+:-------|:------|:-----|:---|:-------
+`IPv6DualStack` | 1.16 | 1.21 | 1.23 | 1.24
+`UnversionedKubeletConfigMap` | 1.22 | 1.23 | 1.25 | 1.26
+`UpgradeAddonsBeforeControlPlane` | 1.28 | - | - | 1.31
+{{< /table >}}
+-->
+{{< table caption="kubeadm 已移除的特性门控" >}}
+特性 | Alpha | Beta | GA | 移除
+:-------|:------|:-----|:---|:-------
+`IPv6DualStack` | 1.16 | 1.21 | 1.23 | 1.24
+`UnversionedKubeletConfigMap` | 1.22 | 1.23 | 1.25 | 1.26
+`UpgradeAddonsBeforeControlPlane` | 1.28 | - | - | 1.31
+{{< /table >}}
+
+<!--
+Feature gate descriptions:
+-->
+特性门控的描述：
+
+<!--
+`IPv6DualStack`
+: This flag helps to configure components dual stack when the feature is in progress. For more details on Kubernetes
+dual-stack support see [Dual-stack support with kubeadm](/docs/setup/production-environment/tools/kubeadm/dual-stack-support/).
+-->
+`IPv6DualStack`
+: 在 IP 双栈特性处于开发过程中时，此标志有助于配置组件的双栈支持。有关 Kubernetes
+  双栈支持的更多详细信息，请参阅 [kubeadm 的双栈支持](/zh-cn/docs/setup/production-environment/tools/kubeadm/dual-stack-support/)。
 
 <!--
 `UnversionedKubeletConfigMap`
@@ -356,14 +465,23 @@ if that does not succeed, kubeadm falls back to using the legacy (versioned) nam
 -->
 `UnversionedKubeletConfigMap`
 : 此标志控制 kubeadm 存储 kubelet 配置数据的 {{<glossary_tooltip text="ConfigMap" term_id="configmap" >}} 的名称。
-在未指定此标志或设置为 `true` 的情况下，此 ConfigMap 被命名为 `kubelet-config`。
-如果将此标志设置为 `false`，则此 ConfigMap 的名称会包括 Kubernetes 的主要版本和次要版本（例如：`kubelet-config-{{< skew currentVersion >}}`）。
-Kubeadm 会确保用于读写 ConfigMap 的 RBAC 规则适合你设置的值。
-当 kubeadm 写入此 ConfigMap 时（在 `kubeadm init` 或 `kubeadm upgrade apply` 期间），
-kubeadm 根据 `UnversionedKubeletConfigMap` 的设置值来执行操作。
-当读取此 ConfigMap 时（在 `kubeadm join`、`kubeadm reset`、`kubeadm upgrade ...` 期间），
-kubeadm 尝试首先使用无版本（后缀）的 ConfigMap 名称；
-如果不成功，kubeadm 将回退到使用该 ConfigMap 的旧（带版本号的）名称。
+  在未指定此标志或设置为 `true` 的情况下，此 ConfigMap 被命名为 `kubelet-config`。
+  如果将此标志设置为 `false`，则此 ConfigMap 的名称会包括 Kubernetes 的主要版本和次要版本
+  （例如：`kubelet-config-{{< skew currentVersion >}}`）。
+  kubeadm 会确保用于读写 ConfigMap 的 RBAC 规则适合你设置的值。
+  当 kubeadm 写入此 ConfigMap 时（在 `kubeadm init` 或 `kubeadm upgrade apply` 期间），
+  kubeadm 根据 `UnversionedKubeletConfigMap` 的设置值来执行操作。
+  当读取此 ConfigMap 时（在执行 `kubeadm join`、`kubeadm reset`、`kubeadm upgrade` 等操作期间），
+  kubeadm 尝试首先使用无版本（后缀）的 ConfigMap 名称；
+  如果不成功，kubeadm 将回退到使用该 ConfigMap 的旧（带版本号的）名称。
+
+<!--
+`UpgradeAddonsBeforeControlPlane`
+: This feature gate has been removed. It was introduced in v1.28 as a deprecated feature and then removed in v1.31. For documentation on older versions, please switch to the corresponding website version.
+-->
+`UpgradeAddonsBeforeControlPlane`
+: 此特性门控已被移除。它在 v1.28 中作为一个已弃用的特性被引入，在 v1.31 中被移除。
+  有关旧版本的文档，请切换到相应的网站版本。
 
 <!--
 ### Adding kube-proxy parameters {#kube-proxy}
@@ -525,12 +643,14 @@ The following phase command can be used to re-upload the certificates after expi
 ```shell
 kubeadm init phase upload-certs --upload-certs --config=SOME_YAML_FILE
 ```
+
 {{< note >}}
 <!--
-A predefined `certificateKey` can be provided in `InitConfiguration` when passing the [configuration file](https://kubernetes.io/docs/reference/config-api/kubeadm-config.v1beta3/) with `--config`.
+A predefined `certificateKey` can be provided in `InitConfiguration` when passing the
+[configuration file](/docs/reference/config-api/kubeadm-config.v1beta4/) with `--config`.
 -->
 在使用 `--config`
-传递[配置文件](https://kubernetes.io/zh-cn/docs/reference/config-api/kubeadm-config.v1beta3/)时，
+传递[配置文件](/zh-cn/docs/reference/config-api/kubeadm-config.v1beta4/)时，
 可以在 `InitConfiguration` 中提供预定义的 `certificateKey`。
 {{< /note >}}
 
@@ -663,11 +783,15 @@ DNS name or an address of a load balancer.
    ```
 
 <!--
-Once the cluster is up, you can grab the admin credentials from the control-plane node
-at `/etc/kubernetes/admin.conf` and use that to talk to the cluster.
+Once the cluster is up, you can use the `/etc/kubernetes/admin.conf` file from
+a control-plane node to talk to the cluster with administrator credentials or
+[Generating kubeconfig files for additional users](/docs/tasks/administer-cluster/kubeadm/kubeadm-certs#kubeconfig-additional-users).
 -->
 一旦集群启动起来，你就可以从控制平面节点的 `/etc/kubernetes/admin.conf` 文件获取管理凭证，
 并使用这个凭证同集群通信。
+
+一旦集群启动起来，你就可以从控制平面节点中的 `/etc/kubernetes/admin.conf`
+文件获取管理凭证或通过[为其他用户生成的 kubeconfig 文件](/zh-cn/docs/tasks/administer-cluster/kubeadm/kubeadm-certs#kubeconfig-additional-users)与集群通信。
 
 <!--
 Note that this style of bootstrap has some relaxed security guarantees because

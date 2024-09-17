@@ -5,7 +5,7 @@ min-kubernetes-server-version: v1.25
 weight: 60
 ---
 
-{{< feature-state for_k8s_version="v1.26" state="beta" >}}
+{{< feature-state feature_gate_name="JobPodFailurePolicy" >}}
 
 <!-- overview -->
 
@@ -28,9 +28,6 @@ You should already be familiar with the basic use of [Job](/docs/concepts/worklo
 
 {{< include "task-tutorial-prereqs.md" >}} {{< version-check >}}
 
-Ensure that the [feature gates](/docs/reference/command-line-tools-reference/feature-gates/)
-`PodDisruptionConditions` and `JobPodFailurePolicy` are both enabled in your cluster.
-
 ## Using Pod failure policy to avoid unnecessary Pod retries
 
 With the following example, you can learn how to use Pod failure policy to
@@ -39,7 +36,7 @@ software bug.
 
 First, create a Job based on the config:
 
-{{< codenew file="/controllers/job-pod-failure-policy-failjob.yaml" >}}
+{{% code_sample file="/controllers/job-pod-failure-policy-failjob.yaml" %}}
 
 by running:
 
@@ -53,10 +50,15 @@ After around 30s the entire Job should be terminated. Inspect the status of the 
 kubectl get jobs -l job-name=job-pod-failure-policy-failjob -o yaml
 ```
 
-In the Job status, see a job `Failed` condition with the field `reason`
-equal `PodFailurePolicy`. Additionally, the `message` field contains a
-more detailed information about the Job termination, such as:
-`Container main for pod default/job-pod-failure-policy-failjob-8ckj8 failed with exit code 42 matching FailJob rule at index 0`.
+In the Job status, the following conditions display:
+- `FailureTarget` condition: has a `reason` field set to `PodFailurePolicy` and
+  a `message` field with more information about the termination, like
+  `Container main for pod default/job-pod-failure-policy-failjob-8ckj8 failed with exit code 42 matching FailJob rule at index 0`.
+  The Job controller adds this condition as soon as the Job is considered a failure.
+  For details, see [Termination of Job Pods](/docs/concepts/workloads/controllers/job/#termination-of-job-pods).
+- `Failed` condition: same `reason` and `message` as the `FailureTarget`
+  condition. The Job controller adds this condition after all of the Job's Pods
+  are terminated.
 
 For comparison, if the Pod failure policy was disabled it would take 6 retries
 of the Pod, taking at least 2 minutes.
@@ -85,7 +87,7 @@ node while the Pod is running on it (within 90s since the Pod is scheduled).
 
 1. Create a Job based on the config:
 
-   {{< codenew file="/controllers/job-pod-failure-policy-ignore.yaml" >}}
+   {{% code_sample file="/controllers/job-pod-failure-policy-ignore.yaml" %}}
 
    by running:
 
@@ -145,7 +147,7 @@ deleted pods, in the `Pending` phase, to a terminal phase
 
 1. First, create a Job based on the config:
 
-   {{< codenew file="/controllers/job-pod-failure-policy-config-issue.yaml" >}}
+   {{% code_sample file="/controllers/job-pod-failure-policy-config-issue.yaml" %}}
 
    by running:
 

@@ -2,7 +2,7 @@
 title: 使用源 IP
 content_type: tutorial
 min-kubernetes-server-version: v1.5
-weight: 10
+weight: 40
 ---
 <!--  
 title: Using Source IP
@@ -43,19 +43,19 @@ the target localization.
 
 <!--
 [NAT](https://en.wikipedia.org/wiki/Network_address_translation)
-: network address translation
+: Network address translation
 
 [Source NAT](https://en.wikipedia.org/wiki/Network_address_translation#SNAT)
-: replacing the source IP on a packet; in this page, that usually means replacing with the IP address of a node.
+: Replacing the source IP on a packet; in this page, that usually means replacing with the IP address of a node.
 
 [Destination NAT](https://en.wikipedia.org/wiki/Network_address_translation#DNAT)
-: replacing the destination IP on a packet; in this page, that usually means replacing with the IP address of a {{< glossary_tooltip term_id="pod" >}}
+: Replacing the destination IP on a packet; in this page, that usually means replacing with the IP address of a {{< glossary_tooltip term_id="pod" >}}
 
 [VIP](/docs/concepts/services-networking/service/#virtual-ips-and-service-proxies)
-: a virtual IP address, such as the one assigned to every {{< glossary_tooltip text="Service" term_id="service" >}} in Kubernetes
+: A virtual IP address, such as the one assigned to every {{< glossary_tooltip text="Service" term_id="service" >}} in Kubernetes
 
 [kube-proxy](/docs/concepts/services-networking/service/#virtual-ips-and-service-proxies)
-: a network daemon that orchestrates Service VIP management on every node
+: A network daemon that orchestrates Service VIP management on every node
 -->
 [NAT](https://zh.wikipedia.org/wiki/%E7%BD%91%E7%BB%9C%E5%9C%B0%E5%9D%80%E8%BD%AC%E6%8D%A2)
 : 网络地址转换
@@ -89,10 +89,12 @@ IP of requests it receives through an HTTP header. You can create it as follows:
 ```shell
 kubectl create deployment source-ip-app --image=registry.k8s.io/echoserver:1.4
 ```
+
 <!-- 
 The output is:
 -->
 输出为：
+
 ```
 deployment.apps/source-ip-app created
 ```
@@ -129,10 +131,12 @@ kube-proxy，则从集群内发送到 ClusterIP 的数据包永远不会进行�
 ```console
 kubectl get nodes
 ```
+
 <!--
 The output is similar to this:
 -->
 输出类似于：
+
 ```
 NAME                           STATUS     ROLES    AGE     VERSION
 kubernetes-node-6jst   Ready      <none>   2h      v1.13.0
@@ -144,14 +148,20 @@ kubernetes-node-jj1t   Ready      <none>   2h      v1.13.0
 Get the proxy mode on one of the nodes (kube-proxy listens on port 10249):
 -->
 在其中一个节点上获取代理模式（kube-proxy 监听 10249 端口）：
+
+<!--
+# Run this in a shell on the node you want to query.
+-->
 ```shell
-# 在要查询的节点上的 shell 中运行
+# 在要查询的节点上的 Shell 中运行
 curl http://localhost:10249/proxyMode
 ```
+
 <!-- 
 The output is: 
 -->
 输出为：
+
 ```
 iptables
 ```
@@ -160,6 +170,7 @@ iptables
 You can test source IP preservation by creating a Service over the source IP app: 
 -->
 你可以通过在源 IP 应用程序上创建 Service 来测试源 IP 保留：
+
 ```shell
 kubectl expose deployment source-ip-app --name=clusterip --port=80 --target-port=8080
 ```
@@ -167,9 +178,11 @@ kubectl expose deployment source-ip-app --name=clusterip --port=80 --target-port
 The output is: 
 -->
 输出为：
+
 ```
 service/clusterip exposed
 ```
+
 ```shell
 kubectl get svc clusterip
 ```
@@ -177,6 +190,7 @@ kubectl get svc clusterip
 The output is similar to:
 -->
 输出类似于：
+
 ```
 NAME         TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)   AGE
 clusterip    ClusterIP   10.0.170.92   <none>        80/TCP    51s
@@ -186,6 +200,7 @@ clusterip    ClusterIP   10.0.170.92   <none>        80/TCP    51s
 And hitting the `ClusterIP` from a pod in the same cluster:
 -->
 并从同一集群中的 Pod 中访问 `ClusterIP`：
+
 ```shell
 kubectl run busybox -it --image=busybox:1.28 --restart=Never --rm
 ```
@@ -193,6 +208,7 @@ kubectl run busybox -it --image=busybox:1.28 --restart=Never --rm
 The output is similar to this:
 -->
 输出类似于：
+
 ```
 Waiting for pod default/busybox to be running, status is Pending, pod ready: false
 If you don't see a command prompt, try pressing enter.
@@ -201,10 +217,15 @@ If you don't see a command prompt, try pressing enter.
 You can then run a command inside that Pod:
 -->
 然后，你可以在该 Pod 中运行命令：
+
+<!--
+# Run this inside the terminal from "kubectl run"
+-->
 ```shell
 # 从 “kubectl run” 的终端中运行
 ip addr
 ```
+
 ```
 1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue
     link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
@@ -224,10 +245,15 @@ ip addr
 …then use `wget` to query the local webserver
 -->
 然后使用 `wget` 查询本地 Web 服务器：
+
+<!--
+# Replace "10.0.170.92" with the IPv4 address of the Service named "clusterip"
+-->
 ```shell
 # 将 “10.0.170.92” 替换为 Service 中名为 “clusterip” 的 IPv4 地址
 wget -qO - 10.0.170.92
 ```
+
 ```
 CLIENT VALUES:
 client_address=10.244.3.8
@@ -251,6 +277,7 @@ are source NAT'd by default. You can test this by creating a `NodePort` Service:
 
 默认情况下，发送到 [`Type=NodePort`](/zh-cn/docs/concepts/services-networking/service/#type-nodeport)
 的 Service 的数据包会经过源 NAT 处理。你可以通过创建一个 `NodePort` 的 Service 来测试这点：
+
 ```shell
 kubectl expose deployment source-ip-app --name=nodeport --port=80 --target-port=8080 --type=NodePort
 ```
@@ -258,6 +285,7 @@ kubectl expose deployment source-ip-app --name=nodeport --port=80 --target-port=
 The output is: 
 -->
 输出为：
+
 ```
 service/nodeport exposed
 ```
@@ -279,10 +307,12 @@ port allocated above.
 ```shell
 for node in $NODES; do curl -s $node:$NODEPORT | grep -i client_address; done
 ```
+
 <!-- 
 The output is similar to:
 -->
 输出类似于：
+
 ```
 client_address=10.180.1.1
 client_address=10.240.0.5
@@ -313,6 +343,7 @@ Visually:
 * Pod 的回复被发送回给客户端
 
 用图表示：
+
 {{< figure src="/zh-cn/docs/images/tutor-service-nodePort-fig01.svg" alt="图 1：源 IP NodePort" class="diagram-large" caption="如图。使用 SNAT 的源 IP（Type=NodePort）" link="https://mermaid.live/edit#pako:eNqNkV9rwyAUxb-K3LysYEqS_WFYKAzat9GHdW9zDxKvi9RoMIZtlH732ZjSbE970cu5v3s86hFqJxEYfHjRNeT5ZcUtIbXRaMNN2hZ5vrYRqt52cSXV-4iMSuwkZiYtyX739EqWaahMQ-V1qPxDVLNOvkYrO6fj2dupWMR2iiT6foOKdEZoS5Q2hmVSStoH7w7IMqXUVOefWoaG3XVftHbGeZYVRbH6ZXJ47CeL2-qhxvt_ucTe1SUlpuMN6CX12XeGpLdJiaMMFFr0rdAyvvfxjHEIDbbIgcVSohKDCRy4PUV06KQIuJU6OA9MCdMjBTEEt_-2NbDgB7xAGy3i97VJPP0ABRmcqg" >}}
 
 <!-- 
@@ -340,10 +371,12 @@ Set the `service.spec.externalTrafficPolicy` field as follows:
 ```shell
 kubectl patch svc nodeport -p '{"spec":{"externalTrafficPolicy":"Local"}}'
 ```
+
 <!-- 
 The output is:
 -->
 输出为：
+
 ```
 service/nodeport patched
 ```
@@ -356,10 +389,12 @@ Now, re-run the test:
 ```shell
 for node in $NODES; do curl --connect-timeout 1 -s $node:$NODEPORT | grep -i client_address; done
 ```
+
 <!-- 
 The output is similar to:
 -->
 输出类似于：
+
 ```
 client_address=198.51.100.79
 ```
@@ -417,10 +452,12 @@ You can test this by exposing the source-ip-app through a load balancer:
 ```shell
 kubectl expose deployment source-ip-app --name=loadbalancer --port=80 --target-port=8080 --type=LoadBalancer
 ```
+
 <!-- 
 The output is:
 -->
 输出为：
+
 ```
 service/loadbalancer exposed
 ```
@@ -429,13 +466,16 @@ service/loadbalancer exposed
 Print out the IP addresses of the Service:
 -->
 打印 Service 的 IP 地址：
+
 ```console
 kubectl get svc loadbalancer
 ```
+
 <!--
 The output is similar to this:
 -->
 输出类似于：
+
 ```
 NAME           TYPE           CLUSTER-IP    EXTERNAL-IP       PORT(S)   AGE
 loadbalancer   LoadBalancer   10.0.65.118   203.0.113.140     80/TCP    5m
@@ -445,13 +485,16 @@ loadbalancer   LoadBalancer   10.0.65.118   203.0.113.140     80/TCP    5m
 Next, send a request to this Service's external-ip:
 -->
 接下来，发送请求到 Service 的 的外部 IP（External-IP）：
+
 ```shell
 curl 203.0.113.140
 ```
+
 <!--
 The output is similar to this:
 -->
 输出类似于：
+
 ```
 CLIENT VALUES:
 client_address=10.240.0.5
@@ -474,7 +517,7 @@ Visually:
 
 用图表示：
 
-![具有 externalTrafficPolicy 的源 IP](/images/docs/sourceip-externaltrafficpolicy.svg)
+![具有 externalTrafficPolicy 的源 IP](/zh-cn/docs/images/sourceip-externaltrafficpolicy.svg)
 
 <!-- 
 You can test this by setting the annotation:
@@ -498,6 +541,7 @@ kubectl get svc loadbalancer -o yaml | grep -i healthCheckNodePort
 The output is similar to this:
 -->
 输出类似于：
+
 ```yaml
   healthCheckNodePort: 32122
 ```
@@ -512,10 +556,12 @@ serving the health check at `/healthz`. You can test this:
 ```shell
 kubectl get pod -o wide -l app=source-ip-app
 ```
+
 <!-- 
 The output is similar to this:
 -->
 输出类似于：
+
 ```
 NAME                            READY     STATUS    RESTARTS   AGE       IP             NODE
 source-ip-app-826191075-qehz4   1/1       Running   0          20h       10.180.1.136   kubernetes-node-6jst
@@ -525,10 +571,15 @@ source-ip-app-826191075-qehz4   1/1       Running   0          20h       10.180.
 Use `curl` to fetch the `/healthz` endpoint on various nodes:
 -->
 使用 `curl` 获取各个节点上的 `/healthz` 端点：
+
+<!--
+# Run this locally on a node you choose
+-->
 ```shell
 # 在你选择的节点上本地运行
 curl localhost:32122/healthz
 ```
+
 ```
 1 Service Endpoints found
 ```
@@ -537,10 +588,15 @@ curl localhost:32122/healthz
 On a different node you might get a different result:
 -->
 在不同的节点上，你可能会得到不同的结果：
+
+<!--
+# Run this locally on a node you choose
+-->
 ```shell
 # 在你选择的节点上本地运行
 curl localhost:32122/healthz
 ```
+
 ```
 No Service Endpoints Found
 ```
@@ -560,10 +616,12 @@ then use `curl` to query the IPv4 address of the load balancer:
 ```shell
 curl 203.0.113.140
 ```
+
 <!-- 
 The output is similar to this:
 -->
 输出类似于：
+
 ```
 CLIENT VALUES:
 client_address=198.51.100.79

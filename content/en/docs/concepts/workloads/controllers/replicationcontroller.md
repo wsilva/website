@@ -3,8 +3,14 @@ reviewers:
 - bprashanth
 - janetkuo
 title: ReplicationController
+api_metadata:
+- apiVersion: "v1"
+  kind: "ReplicationController"
 content_type: concept
 weight: 90
+description: >-
+  Legacy API for managing workloads that can scale horizontally.
+  Superseded by the Deployment and ReplicaSet APIs.
 ---
 
 <!-- overview -->
@@ -19,7 +25,7 @@ always up and available.
 
 <!-- body -->
 
-## How a ReplicationController Works
+## How a ReplicationController works
 
 If there are too many pods, the ReplicationController terminates the extra pods. If there are too few, the
 ReplicationController starts more pods. Unlike manually created pods, the pods maintained by a
@@ -41,7 +47,7 @@ service, such as web servers.
 
 This example ReplicationController config runs three copies of the nginx web server.
 
-{{< codenew file="controllers/replication.yaml" >}}
+{{% code_sample file="controllers/replication.yaml" %}}
 
 Run the example job by downloading the example file and then running this command:
 

@@ -3,9 +3,9 @@ layout: blog
 title: "Kubernetes Removals and Major Changes In v1.27"
 date: 2023-03-17T14:00:00+0000
 slug: upcoming-changes-in-kubernetes-v1-27
+author: >
+   Harshita Sao
 ---
-
-**Author**: Harshita Sao
 
 As Kubernetes develops and matures, features may be deprecated, removed, or replaced
 with better ones for the project's overall health. Based on the information available
@@ -37,7 +37,7 @@ the information about this change and what to do if it impacts you.
 ## The Kubernetes API Removal and Deprecation process
 
 The Kubernetes project has a well-documented
-[deprecation policy](https://kubernetes.io/docs/reference/using-api/deprecation-policy/)
+[deprecation policy](/docs/reference/using-api/deprecation-policy/)
 for features. This policy states that stable APIs may only be deprecated when
 a newer, stable version of that same API is available and that APIs have a
 minimum lifetime for each stability level. A deprecated API has been marked
@@ -214,7 +214,7 @@ that argument, which has been deprecated since the v1.24 release.
 ## Looking ahead
 
 The official list of
-[API removals](https://kubernetes.io/docs/reference/using-api/deprecation-guide/#v1-29)
+[API removals](/docs/reference/using-api/deprecation-guide/#v1-29)
 planned for Kubernetes v1.29 includes:
 
 - The `flowcontrol.apiserver.k8s.io/v1beta2` API version of FlowSchema and

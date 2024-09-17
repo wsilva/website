@@ -3,9 +3,9 @@ layout: blog
 title: "Using OCI artifacts to distribute security profiles for seccomp, SELinux and AppArmor"
 date: 2023-05-24
 slug: oci-security-profiles
+author: >
+  Sascha Grunert
 ---
-
-**Author**: Sascha Grunert
 
 The [Security Profiles Operator (SPO)][spo] makes managing seccomp, SELinux and
 AppArmor profiles within Kubernetes easier than ever. It allows cluster
@@ -116,7 +116,6 @@ are a bunch of registries that already supports OCI artifacts:
 - [Amazon Elastic Container Registry](https://aws.amazon.com/ecr)
 - [Google Artifact Registry](https://cloud.google.com/artifact-registry)
 - [GitHub Packages container registry](https://docs.github.com/en/packages/guides/about-github-container-registry)
-- [Bundle Bar](https://bundle.bar/docs/supported-clients/oras)
 - [Docker Hub](https://hub.docker.com)
 - [Zot Registry](https://zotregistry.io)
 

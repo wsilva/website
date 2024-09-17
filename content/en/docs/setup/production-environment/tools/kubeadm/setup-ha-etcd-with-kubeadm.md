@@ -63,12 +63,29 @@ on Kubernetes dual-stack support see [Dual-stack support with kubeadm](/docs/set
    that has higher precedence than the kubeadm-provided kubelet unit file.
 
    ```sh
+   cat << EOF > /etc/systemd/system/kubelet.service.d/kubelet.conf
+   # Replace "systemd" with the cgroup driver of your container runtime. The default value in the kubelet is "cgroupfs".
+   # Replace the value of "containerRuntimeEndpoint" for a different container runtime if needed.
+   #
+   apiVersion: kubelet.config.k8s.io/v1beta1
+   kind: KubeletConfiguration
+   authentication:
+     anonymous:
+       enabled: false
+     webhook:
+       enabled: false
+   authorization:
+     mode: AlwaysAllow
+   cgroupDriver: systemd
+   address: 127.0.0.1
+   containerRuntimeEndpoint: unix:///var/run/containerd/containerd.sock
+   staticPodPath: /etc/kubernetes/manifests
+   EOF
+
    cat << EOF > /etc/systemd/system/kubelet.service.d/20-etcd-service-manager.conf
    [Service]
    ExecStart=
-   # Replace "systemd" with the cgroup driver of your container runtime. The default value in the kubelet is "cgroupfs".
-   # Replace the value of "--container-runtime-endpoint" for a different container runtime if needed.
-   ExecStart=/usr/bin/kubelet --address=127.0.0.1 --pod-manifest-path=/etc/kubernetes/manifests --cgroup-driver=systemd --container-runtime=remote --container-runtime-endpoint=unix:///var/run/containerd/containerd.sock
+   ExecStart=/usr/bin/kubelet --config=/etc/systemd/system/kubelet.service.d/kubelet.conf
    Restart=always
    EOF
 
@@ -109,14 +126,14 @@ on Kubernetes dual-stack support see [Dual-stack support with kubeadm](/docs/set
    NAME=${NAMES[$i]}
    cat << EOF > /tmp/${HOST}/kubeadmcfg.yaml
    ---
-   apiVersion: "kubeadm.k8s.io/v1beta3"
+   apiVersion: "kubeadm.k8s.io/v1beta4"
    kind: InitConfiguration
    nodeRegistration:
        name: ${NAME}
    localAPIEndpoint:
        advertiseAddress: ${HOST}
    ---
-   apiVersion: "kubeadm.k8s.io/v1beta3"
+   apiVersion: "kubeadm.k8s.io/v1beta4"
    kind: ClusterConfiguration
    etcd:
        local:
@@ -125,13 +142,20 @@ on Kubernetes dual-stack support see [Dual-stack support with kubeadm](/docs/set
            peerCertSANs:
            - "${HOST}"
            extraArgs:
-               initial-cluster: ${NAMES[0]}=https://${HOSTS[0]}:2380,${NAMES[1]}=https://${HOSTS[1]}:2380,${NAMES[2]}=https://${HOSTS[2]}:2380
-               initial-cluster-state: new
-               name: ${NAME}
-               listen-peer-urls: https://${HOST}:2380
-               listen-client-urls: https://${HOST}:2379
-               advertise-client-urls: https://${HOST}:2379
-               initial-advertise-peer-urls: https://${HOST}:2380
+           - name: initial-cluster
+             value: ${NAMES[0]}=https://${HOSTS[0]}:2380,${NAMES[1]}=https://${HOSTS[1]}:2380,${NAMES[2]}=https://${HOSTS[2]}:2380
+           - name: initial-cluster-state
+             value: new
+           - name: name
+             value: ${NAME}
+           - name: listen-peer-urls
+             value: https://${HOST}:2380
+           - name: listen-client-urls
+             value: https://${HOST}:2379
+           - name: advertise-client-urls
+             value: https://${HOST}:2379
+           - name: initial-advertise-peer-urls
+             value: https://${HOST}:2380
    EOF
    done
    ```
@@ -288,7 +312,7 @@ on Kubernetes dual-stack support see [Dual-stack support with kubeadm](/docs/set
     https://[HOST1 IP]:2379 is healthy: successfully committed proposal: took = 19.44402ms
     https://[HOST2 IP]:2379 is healthy: successfully committed proposal: took = 35.926451ms
     ```
-    
+
     - Set `${HOST0}`to the IP address of the host you are testing.
 
 

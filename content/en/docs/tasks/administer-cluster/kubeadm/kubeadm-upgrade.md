@@ -42,15 +42,46 @@ The upgrade workflow at high level is the following:
   first drain the node (or nodes) that you are upgrading. In the case of control plane nodes,
   they could be running CoreDNS Pods or other critical workloads. For more information see
   [Draining nodes](/docs/tasks/administer-cluster/safely-drain-node/).
+- The Kubernetes project recommends that you match your kubelet and kubeadm versions.
+  You can instead use a version of kubelet that is older than kubeadm, provided it is within the
+  range of supported versions.
+  For more details, please visit [kubeadm's skew against the kubelet](/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/#kubeadm-s-skew-against-the-kubelet).
 - All containers are restarted after upgrade, because the container spec hash value is changed.
 - To verify that the kubelet service has successfully restarted after the kubelet has been upgraded,
   you can execute `systemctl status kubelet` or view the service logs with `journalctl -xeu kubelet`.
-- Usage of the `--config` flag of `kubeadm upgrade` with
-  [kubeadm configuration API types](/docs/reference/config-api/kubeadm-config.v1beta3)
-  with the purpose of reconfiguring the cluster is not recommended and can have unexpected results. Follow the steps in
+- `kubeadm upgrade` supports `--config` with a
+[`UpgradeConfiguration` API type](/docs/reference/config-api/kubeadm-config.v1beta4) which can
+be used to configure the upgrade process.
+- `kubeadm upgrade` does not support reconfiguration of an existing cluster. Follow the steps in
   [Reconfiguring a kubeadm cluster](/docs/tasks/administer-cluster/kubeadm/kubeadm-reconfigure) instead.
 
+### Considerations when upgrading etcd
+
+Because the `kube-apiserver` static pod is running at all times (even if you
+have drained the node), when you perform a kubeadm upgrade which includes an
+etcd upgrade, in-flight requests to the server will stall while the new etcd
+static pod is restarting. As a workaround, it is possible to actively stop the
+`kube-apiserver` process a few seconds before starting the `kubeadm upgrade
+apply` command. This permits to complete in-flight requests and close existing
+connections, and minimizes the consequence of the etcd downtime. This can be
+done as follows on control plane nodes:
+
+```shell
+killall -s SIGTERM kube-apiserver # trigger a graceful kube-apiserver shutdown
+sleep 20 # wait a little bit to permit completing in-flight requests
+kubeadm upgrade ... # execute a kubeadm upgrade command
+```
+
 <!-- steps -->
+
+## Changing the package repository
+
+If you're using the community-owned package repositories (`pkgs.k8s.io`), you need to
+enable the package repository for the desired Kubernetes minor release. This is explained in
+[Changing the Kubernetes package repository](/docs/tasks/administer-cluster/kubeadm/change-package-repository/)
+document.
+
+{{% legacy-repos-deprecation %}}
 
 ## Determine which version to upgrade to
 
@@ -61,9 +92,9 @@ Find the latest patch release for Kubernetes {{< skew currentVersion >}} using t
 
 ```shell
 # Find the latest {{< skew currentVersion >}} version in the list.
-# It should look like {{< skew currentVersion >}}.x-00, where x is the latest patch.
-apt update
-apt-cache madison kubeadm
+# It should look like {{< skew currentVersion >}}.x-*, where x is the latest patch.
+sudo apt update
+sudo apt-cache madison kubeadm
 ```
 
 {{% /tab %}}
@@ -71,8 +102,8 @@ apt-cache madison kubeadm
 
 ```shell
 # Find the latest {{< skew currentVersion >}} version in the list.
-# It should look like {{< skew currentVersion >}}.x-0, where x is the latest patch.
-yum list --showduplicates kubeadm --disableexcludes=kubernetes
+# It should look like {{< skew currentVersion >}}.x-*, where x is the latest patch.
+sudo yum list --showduplicates kubeadm --disableexcludes=kubernetes
 ```
 
 {{% /tab %}}
@@ -93,18 +124,18 @@ Pick a control plane node that you wish to upgrade first. It must have the `/etc
    {{% tab name="Ubuntu, Debian or HypriotOS" %}}
 
    ```shell
-   # replace x in {{< skew currentVersion >}}.x-00 with the latest patch version
-   apt-mark unhold kubeadm && \
-   apt-get update && apt-get install -y kubeadm={{< skew currentVersion >}}.x-00 && \
-   apt-mark hold kubeadm
+   # replace x in {{< skew currentVersion >}}.x-* with the latest patch version
+   sudo apt-mark unhold kubeadm && \
+   sudo apt-get update && sudo apt-get install -y kubeadm='{{< skew currentVersion >}}.x-*' && \
+   sudo apt-mark hold kubeadm
    ```
 
    {{% /tab %}}
    {{% tab name="CentOS, RHEL or Fedora" %}}
 
    ```shell
-   # replace x in {{< skew currentVersion >}}.x-0 with the latest patch version
-   yum install -y kubeadm-{{< skew currentVersion >}}.x-0 --disableexcludes=kubernetes
+   # replace x in {{< skew currentVersion >}}.x-* with the latest patch version
+   sudo yum install -y kubeadm-'{{< skew currentVersion >}}.x-*' --disableexcludes=kubernetes
    ```
 
    {{% /tab %}}
@@ -119,7 +150,7 @@ Pick a control plane node that you wish to upgrade first. It must have the `/etc
 1. Verify the upgrade plan:
 
    ```shell
-   kubeadm upgrade plan
+   sudo kubeadm upgrade plan
    ```
 
    This command checks that your cluster can be upgraded, and fetches the versions you can upgrade to.
@@ -129,12 +160,6 @@ Pick a control plane node that you wish to upgrade first. It must have the `/etc
    `kubeadm upgrade` also automatically renews the certificates that it manages on this node.
    To opt-out of certificate renewal the flag `--certificate-renewal=false` can be used.
    For more information see the [certificate management guide](/docs/tasks/administer-cluster/kubeadm/kubeadm-certs).
-   {{</ note >}}
-
-   {{< note >}}
-   If `kubeadm upgrade plan` shows any component configs that require manual upgrade, users must provide
-   a config file with replacement configs to `kubeadm upgrade apply` via the `--config` command line flag.
-   Failing to do so will cause `kubeadm upgrade apply` to exit with an error and not perform an upgrade.
    {{</ note >}}
 
 1. Choose a version to upgrade to, and run the appropriate command. For example:
@@ -151,6 +176,16 @@ Pick a control plane node that you wish to upgrade first. It must have the `/etc
 
    [upgrade/kubelet] Now that your control plane is upgraded, please proceed with upgrading your kubelets if you haven't already done so.
    ```
+
+   {{< note >}}
+   For versions earlier than v1.28, kubeadm defaulted to a mode that upgrades the addons (including CoreDNS and kube-proxy)
+   immediately during `kubeadm upgrade apply`, regardless of whether there are other control plane instances that have not
+   been upgraded. This may cause compatibility problems. Since v1.28, kubeadm defaults to a mode that checks whether all
+   the control plane instances have been upgraded before starting to upgrade the addons. You must perform control plane
+   instances upgrade sequentially or at least ensure that the last control plane instance upgrade is not started until all
+   the other control plane instances have been upgraded completely, and the addons upgrade will be performed after the last
+   control plane instance is upgraded.
+   {{</ note >}}
 
 1. Manually upgrade your CNI provider plugin.
 
@@ -193,18 +228,18 @@ kubectl drain <node-to-drain> --ignore-daemonsets
    {{% tab name="Ubuntu, Debian or HypriotOS" %}}
 
    ```shell
-   # replace x in {{< skew currentVersion >}}.x-00 with the latest patch version
-   apt-mark unhold kubelet kubectl && \
-   apt-get update && apt-get install -y kubelet={{< skew currentVersion >}}.x-00 kubectl={{< skew currentVersion >}}.x-00 && \
-   apt-mark hold kubelet kubectl
+   # replace x in {{< skew currentVersion >}}.x-* with the latest patch version
+   sudo apt-mark unhold kubelet kubectl && \
+   sudo apt-get update && sudo apt-get install -y kubelet='{{< skew currentVersion >}}.x-*' kubectl='{{< skew currentVersion >}}.x-*' && \
+   sudo apt-mark hold kubelet kubectl
    ```
 
    {{% /tab %}}
    {{% tab name="CentOS, RHEL or Fedora" %}}
 
    ```shell
-   # replace x in {{< skew currentVersion >}}.x-0 with the latest patch version
-   yum install -y kubelet-{{< skew currentVersion >}}.x-0 kubectl-{{< skew currentVersion >}}.x-0 --disableexcludes=kubernetes
+   # replace x in {{< skew currentVersion >}}.x-* with the latest patch version
+   sudo yum install -y kubelet-'{{< skew currentVersion >}}.x-*' kubectl-'{{< skew currentVersion >}}.x-*' --disableexcludes=kubernetes
    ```
 
    {{% /tab %}}
@@ -252,7 +287,7 @@ The `STATUS` column should show `Ready` for all your nodes, and the version numb
 If `kubeadm upgrade` fails and does not roll back, for example because of an unexpected shutdown during execution, you can run `kubeadm upgrade` again.
 This command is idempotent and eventually makes sure that the actual state is the desired state you declare.
 
-To recover from a bad state, you can also run `kubeadm upgrade apply --force` without changing the version that your cluster is running.
+To recover from a bad state, you can also run `sudo kubeadm upgrade apply --force` without changing the version that your cluster is running.
 
 During upgrade kubeadm writes the following backup folders under `/etc/kubernetes/tmp`:
 
@@ -267,6 +302,11 @@ can be manually restored in `/var/lib/etcd`. In case external etcd is used this 
 In case of a upgrade failure and if the automatic rollback does not work, the contents of this folder can be
 manually restored in `/etc/kubernetes/manifests`. If for some reason there is no difference between a pre-upgrade
 and post-upgrade manifest file for a certain component, a backup file for it will not be written.
+
+{{< note >}}
+After the cluster upgrade using kubeadm, the backup directory `/etc/kubernetes/tmp` will remain and
+these backup files will need to be cleared manually.
+{{</ note >}}
 
 ## How it works
 

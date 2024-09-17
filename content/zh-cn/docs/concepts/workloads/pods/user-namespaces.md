@@ -13,7 +13,7 @@ min-kubernetes-server-version: v1.25
 -->
 
 <!-- overview -->
-{{< feature-state for_k8s_version="v1.25" state="alpha" >}}
+{{< feature-state for_k8s_version="v1.30" state="beta" >}}
 <!--
 This page explains how user namespaces are used in Kubernetes pods. A user
 namespace isolates the user running inside the container from the one
@@ -80,33 +80,76 @@ ext4, xfs, fat, tmpfs, overlayfs.
 Linux 6.3 中支持 idmap 挂载的一些比较流行的文件系统是：btrfs、ext4、xfs、fat、
 tmpfs、overlayfs。
 
-<!-- When merging this with the dev-1.27 branch conflicts will arise. The text
-as it is in the dev-1.27 branch should be used. -->
 <!--
-In addition, support is needed in the
-{{< glossary_tooltip text="container runtime" term_id="container-runtime" >}}
-to use this feature with Kubernetes stateless pods:
+In addition, the container runtime and its underlying OCI runtime must support
+user namespaces. The following OCI runtimes offer support:
 
-* CRI-O: version 1.25 (and later) supports user namespaces for containers.
-
-Please note that containerd v1.7 supports user namespaces for containers,
-compatible with Kubernetes {{< skew currentVersion >}}. It should not be used
-with Kubernetes 1.27 (and later).
-
-Support for this in [cri-dockerd is not planned][CRI-dockerd-issue] yet.
+* [crun](https://github.com/containers/crun) version 1.9 or greater (it's recommend version 1.13+).
 -->
 
+此外，容器运行时及其底层 OCI 运行时必须支持用户命名空间。以下 OCI 运行时提供支持：
+
+* [crun](https://github.com/containers/crun) 1.9 或更高版本（推荐 1.13+ 版本）。
+
+<!-- ideally, update this if a newer minor release of runc comes out, whether or not it includes the idmap support -->
+
+{{< note >}}
+<!--
+Many OCI runtimes do not include the support needed for using user namespaces in
+Linux pods. If you use a managed Kubernetes, or have downloaded it from packages
+and set it up, it's likely that nodes in your cluster use a runtime that doesn't
+include this support. For example, the most widely used OCI runtime is `runc`,
+and version `1.1.z` of runc doesn't support all the features needed by the
+Kubernetes implementation of user namespaces.
+-->
+许多 OCI 运行时不包含在 Linux Pod 中使用用户命名空间所需的支持。
+如果你使用托管 Kubernetes，或者使用软件包下载并安装 Kubernetes 集群，
+则集群中的节点可能使用不包含支持此特性的运行时。
+例如，最广泛使用的 OCI 运行时是 `runc`，而 runc 的 `1.1.z`
+版本不支持 Kubernetes 实现用户命名空间所需的所有特性。
+
+<!--
+If there is a newer release of runc than 1.1 available for use, check its
+documentation and release notes for compatibility (look for idmap mounts support
+in particular, because that is the missing feature).
+-->
+如果有比 1.1 更新的 runc 版本可供使用，请检查其文档和发行说明以了解兼容性
+（特别寻找 idmap 挂载支持，因为这一特性是缺失的）。
+{{< /note >}}
+
+<!--
+To use user namespaces with Kubernetes, you also need to use a CRI
+ {{< glossary_tooltip text="container runtime" term_id="container-runtime" >}}
+ to use this feature with Kubernetes pods:
+
+* CRI-O: version 1.25 (and later) supports user namespaces for containers.
+-->
 此外，需要在{{< glossary_tooltip text="容器运行时" term_id="container-runtime" >}}提供支持，
-才能在 Kubernetes 无状态 Pod 中使用这一功能：
+才能在 Kubernetes Pod 中使用这一功能：
 
 * CRI-O：1.25（及更高）版本支持配置容器的用户命名空间。
 
-请注意，containerd v1.7 支持配置容器的用户命名空间，与 Kubernetes {{< skew currentVersion >}}
-兼容。它不应与 Kubernetes 1.27（及更高）版本一起使用。
+<!--
+containerd v1.7 is not compatible with the userns support in Kubernetes v1.27 to v{{< skew latestVersion >}}.
+Kubernetes v1.25 and v1.26 used an earlier implementation that **is** compatible with containerd v1.7,
+in terms of userns support.
+If you are using a version of Kubernetes other than {{< skew currentVersion >}},
+check the documentation for that version of Kubernetes for the most relevant information.
+If there is a newer release of containerd than v1.7 available for use, also check the containerd
+documentation for compatibility information.
 
-目前 [cri-dockerd 没有计划][CRI-dockerd-issue]支持此功能。
+You can see the status of user namespaces support in cri-dockerd tracked in an [issue][CRI-dockerd-issue]
+on GitHub.
+-->
+containerd v1.7 与 Kubernetes v1.27 至 v{{< skew currentVersion >}}
+版本中的用户命名空间不兼容。
+Kubernetes v1.25 和 v1.26 使用了早期的实现，在用户命名空间方面与 containerd v1.7 兼容。
+如果你使用的 Kubernetes 版本不是 {{< skew currentVersion >}}，请查看该版本 Kubernetes
+的文档以获取更准确的信息。
+如果有比 v1.7 更新的 containerd 版本可供使用，请检查 containerd 文档以获取兼容性信息。
 
-[CRI-dockerd-issue]: https://github.com/Mirantis/cri-dockerd/issues/74
+你可以在 GitHub 上的 [issue][CRI-dockerd-issue] 中查看 cri-dockerd
+中用户命名空间支持的状态。
 
 <!--
 ## Introduction
@@ -128,7 +171,7 @@ to `false`.
 
 <!--
 The kubelet will pick host UIDs/GIDs a pod is mapped to, and will do so in a way
-to guarantee that no two stateless pods on the same node use the same mapping.
+to guarantee that no two pods on the same node use the same mapping.
 
 The `runAsUser`, `runAsGroup`, `fsGroup`, etc. fields in the `pod.spec` always
 refer to the user inside the container.
@@ -137,7 +180,7 @@ The valid UIDs/GIDs when this feature is enabled is the range 0-65535. This
 applies to files and processes (`runAsUser`, `runAsGroup`, etc.).
 -->
 kubelet 将挑选 Pod 所映射的主机 UID/GID，
-并将以保证同一节点上没有两个无状态 Pod 使用相同的映射的方式进行。
+并以此保证同一节点上没有两个 Pod 使用相同的方式进行映射。
 
 `pod.spec` 中的 `runAsUser`、`runAsGroup`、`fsGroup` 等字段总是指的是容器内的用户。
 启用该功能时，有效的 UID/GID 在 0-65535 范围内。这以限制适用于文件和进程（`runAsUser`、`runAsGroup` 等）。
@@ -160,9 +203,9 @@ if user namespaces is activated.
 在用户命名空间被启用时，应该可以继续正常运行，不需要做任何改变。
 
 <!--
-## Understanding user namespaces for stateless pods
+## Understanding user namespaces for pods {#pods-and-userns}
 -->
-## 了解无状态 Pod 的用户命名空间 {#understanding-user-namespaces-for-stateless-pods}
+## 了解 Pod 的用户命名空间 {#pods-and-userns}
 
 <!--
 Several container runtimes with their default configuration (like Docker Engine,
@@ -247,30 +290,161 @@ use, see `man 7 user_namespaces`.
 ## 设置一个节点以支持用户命名空间 {#set-up-a-node-to-support-user-namespaces}
 
 <!--
-It is recommended that the host's files and host's processes use UIDs/GIDs in
-the range of 0-65535.
-
-The kubelet will assign UIDs/GIDs higher than that to pods. Therefore, to
-guarantee as much isolation as possible, the UIDs/GIDs used by the host's files
-and host's processes should be in the range 0-65535.
-
-Note that this recommendation is important to mitigate the impact of CVEs like
-[CVE-2021-25741][CVE-2021-25741], where a pod can potentially read arbitrary
-files in the hosts. If the UIDs/GIDs of the pod and the host don't overlap, it
-is limited what a pod would be able to do: the pod UID/GID won't match the
-host's file owner/group.
+By default, the kubelet assigns pods UIDs/GIDs above the range 0-65535, based on
+the assumption that the host's files and processes use UIDs/GIDs within this
+range, which is standard for most Linux distributions. This approach prevents
+any overlap between the UIDs/GIDs of the host and those of the pods.
 -->
-建议主机的文件和主机的进程使用 0-65535 范围内的 UID/GID。
+默认情况下，kubelet 会分配 0-65535 范围以上的 Pod UID/GID，
+这是基于主机的文件和进程使用此范围内的 UID/GID 的假设，也是大多数 Linux 发行版的标准。
+此方法可防止主机的 UID/GID 与 Pod 的 UID/GID 之间出现重叠。
 
-kubelet 会把高于这个范围的 UID/GID 分配给 Pod。
-因此，为了保证尽可能多的隔离，主机的文件和主机的进程所使用的 UID/GID 应该在 0-65535 范围内。
+<!--
+Avoiding the overlap is important to mitigate the impact of vulnerabilities such
+as [CVE-2021-25741][CVE-2021-25741], where a pod can potentially read arbitrary
+files in the host. If the UIDs/GIDs of the pod and the host don't overlap, it is
+limited what a pod would be able to do: the pod UID/GID won't match the host's
+file owner/group.
+-->
+避免重叠对于减轻 [CVE-2021-25741][CVE-2021-25741] 等漏洞的影响非常重要，
+其中 Pod 可能会读取主机中的任意文件。
+如果 Pod 和主机的 UID/GID 不重叠，则 Pod 的功能将受到限制：
+Pod UID/GID 将与主机的文件所有者/组不匹配。
 
-请注意，这个建议对减轻 [CVE-2021-25741][CVE-2021-25741] 等 CVE 的影响很重要；
-在这些 CVE 中，Pod 有可能读取主机中的任意文件。
-如果 Pod 和主机的 UID/GID 不重叠，Pod 能够做的事情就会受到限制：
-Pod 的 UID/GID 不会与主机的文件所有者/组相匹配。
+<!--
+The kubelet can use a custom range for user IDs and group IDs for pods. To
+configure a custom range, the node needs to have:
+
+ * A user `kubelet` in the system (you cannot use any other username here)
+ * The binary `getsubids` installed (part of [shadow-utils][shadow-utils]) and
+   in the `PATH` for the kubelet binary.
+ * A configuration of subordinate UIDs/GIDs for the `kubelet` user (see
+   [`man 5 subuid`](https://man7.org/linux/man-pages/man5/subuid.5.html) and
+   [`man 5 subgid`](https://man7.org/linux/man-pages/man5/subgid.5.html)).
+-->
+kubelet 可以对 Pod 的用户 ID 和组 ID 使用自定义范围。要配置自定义范围，节点需要具有：
+* 系统中的用户 `kubelet`（此处不能使用任何其他用户名）。
+* 已安装二进制文件 `getsubids`（[shadow-utils][shadow-utils] 的一部分）并位于 kubelet 二进制文件的 `PATH` 中。
+* `kubelet` 用户的从属 UID/GID 配置
+  （请参阅 [`man 5 subuid`](https://man7.org/linux/man-pages/man5/subuid.5.html) 和
+  [`man 5 subgid`](https://man7.org/linux/man-pages/man5/subgid.5.html)）
+
+<!--
+This setting only gathers the UID/GID range configuration and does not change
+the user executing the `kubelet`.
+
+You must follow some constraints for the subordinate ID range that you assign
+to the `kubelet` user:
+-->
+此设置仅收集 UID/GID 范围配置，不会更改执行 `kubelet` 的用户。
+
+对于分配给 `kubelet` 用户的从属 ID 范围， 你必须遵循一些限制：
+
+<!--
+* The subordinate user ID, that starts the UID range for Pods, **must** be a
+  multiple of 65536 and must also be greater than or equal to 65536. In other
+  words, you cannot use any ID from the range 0-65535 for Pods; the kubelet
+  imposes this restriction to make it difficult to create an accidentally insecure
+  configuration.
+-->
+* 启动 Pod 的 UID 范围的从属用户 ID **必须**是 65536 的倍数，并且还必须大于或等于 65536。
+  换句话说，Pod 不能使用 0-65535 范围内的任何 ID；kubelet 施加此限制是为了使创建意外不安全的配置变得困难。
+
+<!--
+* The subordinate ID count must be a multiple of 65536
+
+* The subordinate ID count must be at least `65536 x <maxPods>` where `<maxPods>`
+  is the maximum number of pods that can run on the node.
+
+* You must assign the same range for both user IDs and for group IDs, It doesn't
+  matter if other users have user ID ranges that don't align with the group ID
+  ranges.
+-->
+* 从属 ID 计数必须是 65536 的倍数
+
+* 从属 ID 计数必须至少为 `65536 x <maxPods>`，其中 `<maxPods>` 是节点上可以运行的最大 Pod 数量。
+
+* 你必须为用户 ID 和组 ID 分配相同的范围。如果其他用户的用户 ID 范围与组 ID 范围不一致也没关系。
+
+<!--
+* None of the assigned ranges should overlap with any other assignment.
+
+* The subordinate configuration must be only one line. In other words, you can't
+  have multiple ranges.
+
+For example, you could define `/etc/subuid` and `/etc/subgid` to both have
+these entries for the `kubelet` user:
+-->
+* 所分配的范围不得与任何其他分配重叠。
+
+* 从属配置必须只有一行。换句话说，你不能有多个范围。
+
+例如，你可以定义 `/etc/subuid` 和 `/etc/subgid` 来为 `kubelet` 用户定义以下条目：
+
+<!--
+```
+# The format is
+#   name:firstID:count of IDs
+# where
+# - firstID is 65536 (the minimum value possible)
+# - count of IDs is 110 (default limit for number of) * 65536
+```
+-->
+```
+# 格式为：
+#   name:firstID:count of IDs
+# 在哪里：
+# - firstID 是 65536 （可能的最小值）
+# - IDs 的数量是 110（默认数量限制）* 65536
+kubelet:65536:7208960
+```
 
 [CVE-2021-25741]: https://github.com/kubernetes/kubernetes/issues/104980
+[shadow-utils]: https://github.com/shadow-maint/shadow
+
+<!--
+## Integration with Pod security admission checks
+-->
+## 与 Pod 安全准入检查的集成   {#integration-with-pod-security-admission-checks}
+
+{{< feature-state state="alpha" for_k8s_version="v1.29" >}}
+
+<!--
+For Linux Pods that enable user namespaces, Kubernetes relaxes the application of
+[Pod Security Standards](/docs/concepts/security/pod-security-standards) in a controlled way.
+This behavior can be controlled by the [feature
+gate](/docs/reference/command-line-tools-reference/feature-gates/)
+`UserNamespacesPodSecurityStandards`, which allows an early opt-in for end
+users. Admins have to ensure that user namespaces are enabled by all nodes
+within the cluster if using the feature gate.
+-->
+对于启用了用户命名空间的 Linux Pod，Kubernetes 会以受控方式放宽
+[Pod 安全性标准](/zh-cn/docs/concepts/security/pod-security-standards)的应用。
+这种行为可以通过[特性门控](/zh-cn/docs/reference/command-line-tools-reference/feature-gates/) 
+`UserNamespacesPodSecurityStandards` 进行控制，可以让最终用户提前尝试此特性。
+如果管理员启用此特性门控，必须确保群集中的所有节点都启用了用户命名空间。
+
+<!--
+If you enable the associated feature gate and create a Pod that uses user
+namespaces, the following fields won't be constrained even in contexts that enforce the
+_Baseline_ or _Restricted_ pod security standard. This behavior does not
+present a security concern because `root` inside a Pod with user namespaces
+actually refers to the user inside the container, that is never mapped to a
+privileged user on the host. Here's the list of fields that are **not** checks for Pods in those
+circumstances:
+-->
+如果你启用相关特性门控并创建了使用用户命名空间的 Pod，以下的字段不会被限制，
+即使在执行了 _Baseline_ 或 _Restricted_ Pod 安全性标准的上下文中。这种行为不会带来安全问题，
+因为带有用户命名空间的 Pod 内的 `root` 实际上指的是容器内的用户，绝不会映射到主机上的特权用户。
+以下是在这种情况下**不进行**检查的 Pod 字段列表：
+
+- `spec.securityContext.runAsNonRoot`
+- `spec.containers[*].securityContext.runAsNonRoot`
+- `spec.initContainers[*].securityContext.runAsNonRoot`
+- `spec.ephemeralContainers[*].securityContext.runAsNonRoot`
+- `spec.securityContext.runAsUser`
+- `spec.containers[*].securityContext.runAsUser`
+- `spec.initContainers[*].securityContext.runAsUser`
 
 <!--
 ## Limitations
@@ -292,25 +466,6 @@ allowed to set any of:
 * `hostNetwork: true`
 * `hostIPC: true`
 * `hostPID: true`
-
-<!--
-The pod is allowed to use no volumes at all or, if using volumes, only these
-volume types are allowed:
-
- * configmap
- * secret
- * projected
- * downwardAPI
- * emptyDir
--->
-
-Pod 完全不使用卷是被允许的；如果使用卷，只允许使用以下卷类型：
-
-* configmap
-* secret
-* projected
-* downwardAPI
-* emptyDir
 
 ## {{% heading "whatsnext" %}}
 

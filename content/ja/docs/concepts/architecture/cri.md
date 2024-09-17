@@ -1,12 +1,12 @@
 ---
-title: コンテナランタイムインターフェイス(CRI)
+title: コンテナランタイムインターフェース(CRI)
 content_type: concept
 weight: 60
 ---
 
 <!-- overview -->
 
-CRIは、クラスターコンポーネントを再コンパイルすることなく、kubeletがさまざまなコンテナランタイムを使用できるようにするプラグインインターフェイスです。
+CRIは、クラスターコンポーネントを再コンパイルすることなく、kubeletがさまざまなコンテナランタイムを使用できるようにするプラグインインターフェースです。
 
 {{< glossary_tooltip text="kubelet" term_id="kubelet" >}}が{{< glossary_tooltip text="Pod" term_id="pod" >}}とそのコンテナを起動できるように、クラスター内の各ノードで動作する{{<glossary_tooltip text="container runtime" term_id="container-runtime">}}が必要です。
 
@@ -20,7 +20,7 @@ Kubernetes Container Runtime Interface(CRI)は、[クラスターコンポーネ
 
 {{< feature-state for_k8s_version="v1.23" state="stable" >}}
 
-kubeletは、gRPCを介してコンテナランタイムに接続するときにクライアントとして機能します。ランタイムおよびイメージサービスエンドポイントは、コンテナランタイムで使用可能である必要があります。コンテナランタイムは、`--image-service-endpoint`および`--container-runtime-endpoint`[コマンドラインフラグ](/ja/docs/reference/command-line-tools-reference/kubelet)を使用して、kubelet内で個別に設定できます。
+kubeletは、gRPCを介してコンテナランタイムに接続するときにクライアントとして機能します。ランタイムおよびイメージサービスエンドポイントは、コンテナランタイムで使用可能である必要があります。コンテナランタイムは、`--image-service-endpoint`[コマンドラインフラグ](/ja/docs/reference/command-line-tools-reference/kubelet)を使用して、kubelet内で個別に設定できます。
 
 Kubernetes v{{< skew currentVersion >}}の場合、kubeletはCRI `v1`の使用を優先します。
 コンテナランタイムがCRIの`v1`をサポートしていない場合、kubeletはサポートされている古いバージョンのネゴシエーションを試みます。

@@ -1,5 +1,8 @@
 ---
 title: ReplicaSet
+api_metadata:
+- apiVersion: "apps/v1"
+  kind: "ReplicaSet"
 feature:
   title: 自我修复
   anchor: ReplicationController 如何工作
@@ -8,7 +11,11 @@ feature:
     杀死不响应用户定义的健康检查的容器，
     并且在它们准备好服务之前不会将它们公布给客户端。
 content_type: concept
+description: >-
+  ReplicaSet 的作用是维持在任何给定时间运行的一组稳定的副本 Pod。
+  通常，你会定义一个 Deployment，并用这个 Deployment 自动管理 ReplicaSet。
 weight: 20
+hide_summary: true # 在章节索引中单独列出
 ---
 <!--
 reviewers:
@@ -16,6 +23,9 @@ reviewers:
 - bprashanth
 - madhusudancs
 title: ReplicaSet
+api_metadata:
+- apiVersion: "apps/v1"
+  kind: "ReplicaSet"
 feature:
   title: Self-healing
   anchor: How a ReplicaSet works
@@ -24,7 +34,11 @@ feature:
     kills containers that don't respond to your user-defined health check,
     and doesn't advertise them to clients until they are ready to serve.
 content_type: concept
+description: >-
+  A ReplicaSet's purpose is to maintain a stable set of replica Pods running at any given time.
+  Usually, you define a Deployment and let that Deployment manage ReplicaSets automatically.
 weight: 20
+hide_summary: true # Listed separately in section index
 -->
 
 <!-- overview -->
@@ -56,13 +70,13 @@ ReplicaSet 是通过一组字段来定义的，包括一个用来识别可获得
 进而实现其存在价值。当 ReplicaSet 需要创建新的 Pod 时，会使用所提供的 Pod 模板。
 
 <!--
-A ReplicaSet is linked to its Pods via the Pods' [metadata.ownerReferences](/docs/concepts/architecture/garbage-collection/#owners-and-dependents)
+A ReplicaSet is linked to its Pods via the Pods' [metadata.ownerReferences](/docs/concepts/architecture/garbage-collection/#owners-dependents)
 field, which specifies what resource the current object is owned by. All Pods acquired by a ReplicaSet have their owning
 ReplicaSet's identifying information within their ownerReferences field. It's through this link that the ReplicaSet
 knows of the state of the Pods it is maintaining and plans accordingly.
 -->
 ReplicaSet 通过 Pod 上的
-[metadata.ownerReferences](/zh-cn/docs/concepts/architecture/garbage-collection/#owners-and-dependents)
+[metadata.ownerReferences](/zh-cn/docs/concepts/architecture/garbage-collection/#owners-dependents)
 字段连接到附属 Pod，该字段给出当前对象的属主资源。
 ReplicaSet 所获得的 Pod 都在其 ownerReferences 字段中包含了属主 ReplicaSet
 的标识信息。正是通过这一连接，ReplicaSet 知道它所维护的 Pod 集合的状态，
@@ -105,7 +119,7 @@ Deployment，并在 spec 部分定义你的应用。
 -->
 ## 示例    {#example}
 
-{{< codenew file="controllers/frontend.yaml" >}}
+{{% code_sample file="controllers/frontend.yaml" %}}
 
 <!--
 Saving this manifest into `frontend.yaml` and submitting it to a Kubernetes cluster will
@@ -157,15 +171,14 @@ Namespace:    default
 Selector:     tier=frontend
 Labels:       app=guestbook
               tier=frontend
-Annotations:  kubectl.kubernetes.io/last-applied-configuration:
-                {"apiVersion":"apps/v1","kind":"ReplicaSet","metadata":{"annotations":{},"labels":{"app":"guestbook","tier":"frontend"},"name":"frontend",...
+Annotations:  <none>
 Replicas:     3 current / 3 desired
 Pods Status:  3 Running / 0 Waiting / 0 Succeeded / 0 Failed
 Pod Template:
   Labels:  tier=frontend
   Containers:
    php-redis:
-    Image:        gcr.io/google_samples/gb-frontend:v3
+    Image:        us-docker.pkg.dev/google-samples/containers/gke/gb-frontend:v5
     Port:         <none>
     Host Port:    <none>
     Environment:  <none>
@@ -174,9 +187,9 @@ Pod Template:
 Events:
   Type    Reason            Age   From                   Message
   ----    ------            ----  ----                   -------
-  Normal  SuccessfulCreate  117s  replicaset-controller  Created pod: frontend-wtsmm
-  Normal  SuccessfulCreate  116s  replicaset-controller  Created pod: frontend-b2zdv
-  Normal  SuccessfulCreate  116s  replicaset-controller  Created pod: frontend-vcmts
+  Normal  SuccessfulCreate  13s   replicaset-controller  Created pod: frontend-gbgfx
+  Normal  SuccessfulCreate  13s   replicaset-controller  Created pod: frontend-rwz57
+  Normal  SuccessfulCreate  13s   replicaset-controller  Created pod: frontend-wkl7w
 ```
 
 <!--
@@ -195,9 +208,9 @@ You should see Pod information similar to:
 
 ```
 NAME             READY   STATUS    RESTARTS   AGE
-frontend-b2zdv   1/1     Running   0          6m36s
-frontend-vcmts   1/1     Running   0          6m36s
-frontend-wtsmm   1/1     Running   0          6m36s
+frontend-gbgfx   1/1     Running   0          10m
+frontend-rwz57   1/1     Running   0          10m
+frontend-wkl7w   1/1     Running   0          10m
 ```
 
 <!--
@@ -208,7 +221,7 @@ To do this, get the yaml of one of the Pods running:
 要实现这点，可取回运行中的某个 Pod 的 YAML：
 
 ```shell
-kubectl get pods frontend-b2zdv -o yaml
+kubectl get pods frontend-gbgfx -o yaml
 ```
 
 <!--
@@ -221,11 +234,11 @@ The output will look similar to this, with the frontend ReplicaSet's info set in
 apiVersion: v1
 kind: Pod
 metadata:
-  creationTimestamp: "2020-02-12T07:06:16Z"
+  creationTimestamp: "2024-02-28T22:30:44Z"
   generateName: frontend-
   labels:
     tier: frontend
-  name: frontend-b2zdv
+  name: frontend-gbgfx
   namespace: default
   ownerReferences:
   - apiVersion: apps/v1
@@ -233,7 +246,7 @@ metadata:
     controller: true
     kind: ReplicaSet
     name: frontend
-    uid: f391f6db-bb9b-4c09-ae74-6a1f77f3d5cf
+    uid: e129deca-f864-481b-bb16-b27abfd92292
 ...
 ```
 
@@ -255,7 +268,7 @@ Pod，它还可以像前面小节中所描述的那样获得其他 Pod。
 
 以前面的 frontend ReplicaSet 为例，并在以下清单中指定这些 Pod：
 
-{{< codenew file="pods/pod-rs.yaml" >}}
+{{% code_sample file="pods/pod-rs.yaml" %}}
 
 <!--
 As those Pods do not have a Controller (or any object) as their owner reference and match the selector of the frontend
@@ -347,7 +360,7 @@ pod2             1/1     Running   0          36s
 ```
 
 <!--
-In this manner, a ReplicaSet can own a non-homogenous set of Pods
+In this manner, a ReplicaSet can own a non-homogeneous set of Pods
 -->
 采用这种方式，一个 ReplicaSet 中可以包含异质的 Pod 集合。
 
@@ -564,15 +577,12 @@ prioritize scaling down pods based on the following general algorithm:
    the pod with the lower value will come first.
 1. Pods on nodes with more replicas come before pods on nodes with fewer replicas.
 1. If the pods' creation times differ, the pod that was created more recently
-   comes before the older pod (the creation times are bucketed on an integer log scale
-   when the `LogarithmicScaleDown` [feature gate](/docs/reference/command-line-tools-reference/feature-gates/) is enabled)
+   comes before the older pod (the creation times are bucketed on an integer log scale).
 -->
 1. 首先选择剔除悬决（Pending，且不可调度）的各个 Pod
 2. 如果设置了 `controller.kubernetes.io/pod-deletion-cost` 注解，则注解值较小的优先被裁减掉
 3. 所处节点上副本个数较多的 Pod 优先于所处节点上副本较少者
-4. 如果 Pod 的创建时间不同，最近创建的 Pod 优先于早前创建的 Pod 被裁减。
-   （当 `LogarithmicScaleDown` 这一[特性门控](/zh-cn/docs/reference/command-line-tools-reference/feature-gates/)
-   被启用时，创建时间是按整数幂级来分组的）。
+4. 如果 Pod 的创建时间不同，最近创建的 Pod 优先于早前创建的 Pod 被裁减（创建时间是按整数幂级来分组的）。
 
 <!--
 If all of the above match, then selection is random.
@@ -594,11 +604,11 @@ annotation, users can set a preference regarding which pods to remove first when
 注解，用户可以对 ReplicaSet 缩容时要先删除哪些 Pod 设置偏好。
 
 <!--
-The annotation should be set on the pod, the range is [-2147483647, 2147483647]. It represents the cost of
+The annotation should be set on the pod, the range is [-2147483648, 2147483647]. It represents the cost of
 deleting a pod compared to other pods belonging to the same ReplicaSet. Pods with lower deletion
 cost are preferred to be deleted before pods with higher deletion cost. 
 -->
-此注解要设置到 Pod 上，取值范围为 [-2147483647, 2147483647]。
+此注解要设置到 Pod 上，取值范围为 [-2147483648, 2147483647]。
 所代表的是删除同一 ReplicaSet 中其他 Pod 相比较而言的开销。
 删除开销较小的 Pod 比删除开销较高的 Pod 更容易被删除。
 
@@ -660,7 +670,7 @@ ReplicaSet 也可以作为[水平的 Pod 扩缩器 (HPA)](/zh-cn/docs/tasks/run-
 的目标。也就是说，ReplicaSet 可以被 HPA 自动扩缩。
 以下是 HPA 以我们在前一个示例中创建的副本集为目标的示例。
 
-{{< codenew file="controllers/hpa-rs.yaml" >}}
+{{% code_sample file="controllers/hpa-rs.yaml" %}}
 
 <!--
 Saving this manifest into `hpa-rs.yaml` and submitting it to a Kubernetes cluster should

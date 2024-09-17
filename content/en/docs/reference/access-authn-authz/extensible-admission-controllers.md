@@ -8,7 +8,7 @@ reviewers:
 - jpbetz
 title: Dynamic Admission Control
 content_type: concept
-weight: 40
+weight: 45
 ---
 
 <!-- overview -->
@@ -680,7 +680,7 @@ The `matchPolicy` lets a webhook define how its `rules` are used to match incomi
 Allowed values are `Exact` or `Equivalent`.
 
 * `Exact` means a request should be intercepted only if it exactly matches a specified rule.
-* `Equivalent` means a request should be intercepted if modifies a resource listed in `rules`,
+* `Equivalent` means a request should be intercepted if it modifies a resource listed in `rules`,
   even via another API group or version.
 
 In the example given above, the webhook that only registered for `apps/v1` could use `matchPolicy`:
@@ -721,14 +721,9 @@ The `matchPolicy` for an admission webhooks defaults to `Equivalent`.
 
 ### Matching requests: `matchConditions`
 
-{{< feature-state state="alpha" for_k8s_version="v1.27" >}}
+{{< feature-state feature_gate_name="AdmissionWebhookMatchConditions" >}}
 
-{{< note >}}
-Use of `matchConditions` requires the [featuregate](/docs/reference/command-line-tools-reference/feature-gates/)
-`AdmissionWebhookMatchConditions` to be explicitly enabled on the kube-apiserver before this feature can be used.
-{{< /note >}}
-
-You can define _match conditions_for webhooks if you need fine-grained request filtering. These
+You can define _match conditions_ for webhooks if you need fine-grained request filtering. These
 conditions are useful if you find that match rules, `objectSelectors` and `namespaceSelectors` still
 doesn't provide the filtering you want over when to call out over HTTP. Match conditions are
 [CEL expressions](/docs/reference/using-api/cel/). All match conditions must evaluate to true for the
@@ -754,6 +749,7 @@ webhooks:
         namespace: my-namespace
         name: my-webhook
       caBundle: '<omitted>'
+    # You can have up to 64 matchConditions per webhook
     matchConditions:
       - name: 'exclude-leases' # Each match condition must have a unique name
         expression: '!(request.resource.group == "coordination.k8s.io" && request.resource.resource == "leases")' # Match non-lease resources.
@@ -779,12 +775,17 @@ webhooks:
         namespace: my-namespace
         name: my-webhook
       caBundle: '<omitted>'
+    # You can have up to 64 matchConditions per webhook
     matchConditions:
       - name: 'breakglass'
         # Skip requests made by users authorized to 'breakglass' on this webhook.
         # The 'breakglass' API verb does not need to exist outside this check.
         expression: '!authorizer.group("admissionregistration.k8s.io").resource("validatingwebhookconfigurations").name("my-webhook.example.com").check("breakglass").allowed()'
 ```
+
+{{< note >}}
+You can define up to 64 elements in the `matchConditions` field per webhook.
+{{< /note >}}
 
 Match conditions have access to the following CEL variables:
 

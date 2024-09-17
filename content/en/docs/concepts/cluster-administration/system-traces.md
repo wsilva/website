@@ -22,6 +22,9 @@ with the gRPC exporter and can be collected and routed to tracing backends using
 
 ## Trace Collection
 
+Kubernetes components have built-in gRPC exporters for OTLP to export traces, either with an OpenTelemetry Collector, 
+or without an OpenTelemetry Collector.
+
 For a complete guide to collecting traces and using the collector, see
 [Getting Started with the OpenTelemetry Collector](https://opentelemetry.io/docs/collector/getting-started/).
 However, there are a few things to note that are specific to Kubernetes components.
@@ -46,6 +49,16 @@ service:
       receivers: [otlp]
       exporters: [logging]
 ```
+
+To directly emit traces to a backend without utilizing a collector, 
+specify the endpoint field in the Kubernetes tracing configuration file with the desired trace backend address. 
+This method negates the need for a collector and simplifies the overall structure.
+
+For trace backend header configuration, including authentication details, environment variables can be used with `OTEL_EXPORTER_OTLP_HEADERS`, 
+see [OTLP Exporter Configuration](https://opentelemetry.io/docs/languages/sdk-configuration/otlp-exporter/).
+
+Additionally, for trace resource attribute configuration such as Kubernetes cluster name, namespace, Pod name, etc., 
+environment variables can also be used with `OTEL_RESOURCE_ATTRIBUTES`, see [OTLP Kubernetes Resource](https://opentelemetry.io/docs/specs/semconv/resource/k8s/).
 
 ## Component traces
 
@@ -76,7 +89,7 @@ For more information about the `TracingConfiguration` struct, see
 
 ### kubelet traces
 
-{{< feature-state for_k8s_version="v1.27" state="beta" >}}
+{{< feature-state feature_gate_name="KubeletTracing" >}}
 
 The kubelet CRI interface and authenticated http servers are instrumented to generate
 trace spans. As with the apiserver, the endpoint and sampling rate are configurable.
@@ -105,8 +118,12 @@ span will be sent to the exporter.
 
 The kubelet in Kubernetes v{{< skew currentVersion >}} collects spans from
 the garbage collection, pod synchronization routine as well as every gRPC
-method. Connected container runtimes like CRI-O and containerd can link the
-traces to their exported spans to provide additional context of information.
+method. The kubelet propagates trace context with gRPC requests so that
+container runtimes with trace instrumentation, such as CRI-O and containerd,
+can associate their exported spans with the trace context from the kubelet.
+The resulting traces will have parent-child links between kubelet and
+container runtime spans, providing helpful context when debugging node
+issues.
 
 Please note that exporting spans always comes with a small performance overhead
 on the networking and CPU side, depending on the overall configuration of the
@@ -125,4 +142,6 @@ there are no guarantees of backwards compatibility for tracing instrumentation.
 ## {{% heading "whatsnext" %}}
 
 * Read about [Getting Started with the OpenTelemetry Collector](https://opentelemetry.io/docs/collector/getting-started/)
+* Read about [OTLP Exporter Configuration](https://opentelemetry.io/docs/languages/sdk-configuration/otlp-exporter/)
+
 

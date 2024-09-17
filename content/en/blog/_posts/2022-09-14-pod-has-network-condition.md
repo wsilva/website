@@ -3,10 +3,9 @@ layout: blog
 title: 'Kubernetes 1.25: PodHasNetwork Condition for Pods'
 date: 2022-09-14
 slug: pod-has-network-condition
+author: >
+  Deep Debroy (Apple)
 ---
-
-**Author:**
-Deep Debroy (Apple)
 
 Kubernetes 1.25 introduces Alpha support for a new kubelet-managed pod condition
 in the status field of a pod: `PodHasNetwork`. The kubelet, for a worker node,
@@ -22,6 +21,13 @@ per container characteristics like image size or payload) can utilize the
 (SLIs). Certain operators or controllers that manage underlying pods may utilize
 the `PodHasNetwork` condition to optimize the set of actions performed when pods
 repeatedly fail to come up.
+
+### Updates for Kubernetes 1.28
+
+The `PodHasNetwork` condition has been renamed to `PodReadyToStartContainers`.
+Alongside that change, the feature gate `PodHasNetworkCondition` has been replaced by
+`PodReadyToStartContainersCondition`. You need to set `PodReadyToStartContainersCondition`
+to true in order to use the new feature in v1.28.0 and later.
 
 ### How is this different from the existing Initialized condition reported for pods?
 

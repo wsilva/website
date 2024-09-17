@@ -3,11 +3,13 @@ layout: blog
 title: "Kubernetes 1.25: CustomResourceDefinition Validation Rules Graduate to Beta"
 date: 2022-09-23
 slug: crd-validation-rules-beta
+author: >
+  Joe Betz (Google),
+  Cici Huang (Google),
+  Kermit Alexander (Google)
 ---
 
-**Authors:** Joe Betz (Google), Cici Huang (Google), Kermit Alexander (Google)
-
-In Kubernetes 1.25, [Validation rules for CustomResourceDefinitions](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#validation-rules) (CRDs) have graduated to Beta!
+In Kubernetes 1.25, [Validation rules for CustomResourceDefinitions](/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#validation-rules) (CRDs) have graduated to Beta!
 
 Validation rules make it possible to declare how custom resources are validated using the [Common Expression Language](https://github.com/google/cel-spec) (CEL). For example:
 

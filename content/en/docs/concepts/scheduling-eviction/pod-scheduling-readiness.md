@@ -6,10 +6,10 @@ weight: 40
 
 <!-- overview -->
 
-{{< feature-state for_k8s_version="v1.26" state="alpha" >}}
+{{< feature-state for_k8s_version="v1.30" state="stable" >}}
 
 Pods were considered ready for scheduling once created. Kubernetes scheduler
-does its due diligence to find nodes to place all pending Pods. However, in a 
+does its due diligence to find nodes to place all pending Pods. However, in a
 real-world case, some Pods may stay in a "miss-essential-resources" state for a long period.
 These Pods actually churn the scheduler (and downstream integrators like Cluster AutoScaler)
 in an unnecessary manner.
@@ -31,7 +31,7 @@ each schedulingGate can be removed in arbitrary order, but addition of a new sch
 
 To mark a Pod not-ready for scheduling, you can create it with one or more scheduling gates like this:
 
-{{< codenew file="pods/pod-with-scheduling-gates.yaml" >}}
+{{% code_sample file="pods/pod-with-scheduling-gates.yaml" %}}
 
 After the Pod's creation, you can check its state using:
 
@@ -59,9 +59,9 @@ The output is:
 ```
 
 To inform scheduler this Pod is ready for scheduling, you can remove its `schedulingGates` entirely
-by re-applying a modified manifest:
+by reapplying a modified manifest:
 
-{{< codenew file="pods/pod-without-scheduling-gates.yaml" >}}
+{{% code_sample file="pods/pod-without-scheduling-gates.yaml" %}}
 
 You can check if the `schedulingGates` is cleared by running:
 
@@ -79,7 +79,7 @@ Given the test-pod doesn't request any CPU/memory resources, it's expected that 
 transited from previous `SchedulingGated` to `Running`:
 
 ```none
-NAME       READY   STATUS    RESTARTS   AGE   IP         NODE  
+NAME       READY   STATUS    RESTARTS   AGE   IP         NODE
 test-pod   1/1     Running   0          15s   10.0.0.4   node-2
 ```
 
@@ -89,13 +89,11 @@ The metric `scheduler_pending_pods` comes with a new label `"gated"` to distingu
 has been tried scheduling but claimed as unschedulable, or explicitly marked as not ready for
 scheduling. You can use `scheduler_pending_pods{queue="gated"}` to check the metric result.
 
-## Mutable Pod Scheduling Directives
-
-{{< feature-state for_k8s_version="v1.27" state="beta" >}}
+## Mutable Pod scheduling directives
 
 You can mutate scheduling directives of Pods while they have scheduling gates, with certain constraints.
-At a high level, you can only tighten the scheduling directives of a Pod. In other words, the updated 
-directives would cause the Pods to only be able to be scheduled on a subset of the nodes that it would 
+At a high level, you can only tighten the scheduling directives of a Pod. In other words, the updated
+directives would cause the Pods to only be able to be scheduled on a subset of the nodes that it would
 previously match. More concretely, the rules for updating a Pod's scheduling directives are as follows:
 
 1. For `.spec.nodeSelector`, only additions are allowed. If absent, it will be allowed to be set.
@@ -107,8 +105,8 @@ previously match. More concretely, the rules for updating a Pod's scheduling dir
    or `fieldExpressions` are allowed, and no changes to existing `matchExpressions`
    and `fieldExpressions` will be allowed. This is because the terms in
    `.requiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms`, are ORed
-   while the expressions in `nodeSelectorTerms[].matchExpressions` and 
-   `nodeSelectorTerms[].fieldExpressions` are ANDed. 
+   while the expressions in `nodeSelectorTerms[].matchExpressions` and
+   `nodeSelectorTerms[].fieldExpressions` are ANDed.
 
 4. For `.preferredDuringSchedulingIgnoredDuringExecution`, all updates are allowed.
    This is because preferred terms are not authoritative, and so policy controllers

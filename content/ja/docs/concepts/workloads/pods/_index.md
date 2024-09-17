@@ -30,7 +30,7 @@ Dockerの概念を使って説明すると、Podは共有の名前空間と共�
 
 以下は、`nginx:1.14.2`イメージが実行されるコンテナからなるPodの例を記載しています。
 
-{{< codenew file="pods/simple-pod.yaml" >}}
+{{% codenew file="pods/simple-pod.yaml" %}}
 
 上記のようなPodを作成するには、以下のコマンドを実行します:
 ```shell
@@ -174,7 +174,7 @@ Linuxでは、Pod内のどんなコンテナも、`privileged`フラグをコン
 
 ## static Pod
 
-*static Pod*は、{{< glossary_tooltip text="APIサーバー" term_id="kube-apiserver" >}}には管理されない、特定のノード上でkubeletデーモンによって直接管理されるPodのことです。大部分のPodはコントロープレーン(たとえば{{< glossary_tooltip text="Deployment" term_id="deployment" >}})によって管理されますが、static Podの場合はkubeletが各static Podを直接管理します(障害時には再起動します)。
+*static Pod*は、{{< glossary_tooltip text="APIサーバー" term_id="kube-apiserver" >}}には管理されない、特定のノード上でkubeletデーモンによって直接管理されるPodのことです。大部分のPodはコントロールプレーン(たとえば{{< glossary_tooltip text="Deployment" term_id="deployment" >}})によって管理されますが、static Podの場合はkubeletが各static Podを直接管理します(障害時には再起動します)。
 
 static Podは常に特定のノード上の1つの{{< glossary_tooltip term_id="kubelet" >}}に紐付けられます。static Podの主な用途は、セルフホストのコントロールプレーンを実行すること、言い換えると、kubeletを使用して個別の[コントロールプレーンコンポーネント](/ja/docs/concepts/overview/components/#control-plane-components)を管理することです。
 

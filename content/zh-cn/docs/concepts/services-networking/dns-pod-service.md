@@ -184,9 +184,9 @@ SRV 记录格式为 `_port-name._port-protocol.my-svc.my-namespace.svc.cluster-d
 <!--
 ### A/AAAA records
 
-In general a Pod has the following DNS resolution:
+Kube-DNS versions, prior to the implementation of the [DNS specification](https://github.com/kubernetes/dns/blob/master/docs/specification.md), had the following DNS resolution:
 
-`pod-ip-address.my-namespace.pod.cluster-domain.example`.
+`pod-ipv4-address.my-namespace.pod.cluster-domain.example`.
 
 For example, if a Pod in the `default` namespace has the IP address 172.17.0.3,
 and the domain name for your cluster is `cluster.local`, then the Pod has a DNS name:
@@ -195,13 +195,14 @@ and the domain name for your cluster is `cluster.local`, then the Pod has a DNS 
 
 Any Pods exposed by a Service have the following DNS resolution available:
 
-`pod-ip-address.service-name.my-namespace.svc.cluster-domain.example`.
+`pod-ipv4-address.service-name.my-namespace.svc.cluster-domain.example`.
 -->
 ### A/AAAA 记录 {#a-aaaa-records}
 
-一般而言，Pod 会对应如下 DNS 名字解析：
+在实现 [DNS 规范](https://github.com/kubernetes/dns/blob/master/docs/specification.md)之前，
+Kube-DNS 版本使用以下 DNS 解析：
 
-`pod-ip-address.my-namespace.pod.cluster-domain.example`
+`pod-ipv4-address.my-namespace.pod.cluster-domain.example`
 
 例如，对于一个位于 `default` 名字空间，IP 地址为 172.17.0.3 的 Pod，
 如果集群的域名为 `cluster.local`，则 Pod 会对应 DNS 名称：
@@ -210,7 +211,7 @@ Any Pods exposed by a Service have the following DNS resolution available:
 
 通过 Service 暴露出来的所有 Pod 都会有如下 DNS 解析名称可用：
 
-`pod-ip-address.service-name.my-namespace.svc.cluster-domain.example`
+`pod-ipv4-address.service-name.my-namespace.svc.cluster-domain.example`
 
 <!--
 ### Pod's hostname and subdomain fields
@@ -369,7 +370,7 @@ When you set `setHostnameAsFQDN: true` in the Pod spec, the kubelet writes the P
 <!--
 In Linux, the hostname field of the kernel (the `nodename` field of `struct utsname`) is limited to 64 characters.
 
-If a Pod enables this feature and its FQDN is longer than 64 character, it will fail to start. The Pod will remain in `Pending` status (`ContainerCreating` as seen by `kubectl`) generating error events, such as Failed to construct FQDN from Pod hostname and cluster domain, FQDN `long-FQDN` is too long (64 characters is the max, 70 characters requested). One way of improving user experience for this scenario is to create an [admission webhook controller](/docs/reference/access-authn-authz/extensible-admission-controllers/#admission-webhooks) to control FQDN size when users create top level objects, for example, Deployment.
+If a Pod enables this feature and its FQDN is longer than 64 character, it will fail to start. The Pod will remain in `Pending` status (`ContainerCreating` as seen by `kubectl`) generating error events, such as Failed to construct FQDN from Pod hostname and cluster domain, FQDN `long-FQDN` is too long (64 characters is the max, 70 characters requested). One way of improving user experience for this scenario is to create an [admission webhook controller](/docs/reference/access-authn-authz/extensible-admission-controllers/#what-are-admission-webhooks) to control FQDN size when users create top level objects, for example, Deployment.
 -->
 在 Linux 中，内核的主机名字段（`struct utsname` 的 `nodename` 字段）限定最多 64 个字符。
 
@@ -380,7 +381,7 @@ Pod 会一直出于 `Pending` 状态（通过 `kubectl` 所看到的 `ContainerC
 `long-FQDN` is too long (64 characters is the max, 70 characters requested)."
 （无法基于 Pod 主机名和集群域名构造 FQDN，FQDN `long-FQDN` 过长，至多 64 个字符，请求字符数为 70）。
 对于这种场景而言，改善用户体验的一种方式是创建一个
-[准入 Webhook 控制器](/zh-cn/docs/reference/access-authn-authz/extensible-admission-controllers/#admission-webhooks)，
+[准入 Webhook 控制器](/zh-cn/docs/reference/access-authn-authz/extensible-admission-controllers/#what-are-admission-webhooks)，
 在用户创建顶层对象（如 Deployment）的时候控制 FQDN 的长度。
 {{< /note >}}
 
@@ -498,7 +499,7 @@ Pod 的 DNS 配置可让用户对 Pod 的 DNS 设置进行更多控制。
   This property is optional. When specified, the provided list will be merged
   into the base search domain names generated from the chosen DNS policy.
   Duplicate domain names are removed.
-  Kubernetes allows for at most 6 search domains.
+  Kubernetes allows up to 32 search domains.
 - `options`: an optional list of objects where each object may have a `name`
   property (required) and a `value` property (optional). The contents in this
   property will be merged to the options generated from the specified DNS policy.
@@ -512,7 +513,7 @@ Pod 的 DNS 配置可让用户对 Pod 的 DNS 设置进行更多控制。
 
 - `searches`：用于在 Pod 中查找主机名的 DNS 搜索域的列表。此属性是可选的。
   指定此属性时，所提供的列表将合并到根据所选 DNS 策略生成的基本搜索域名中。
-  重复的域名将被删除。Kubernetes 最多允许 6 个搜索域。
+  重复的域名将被删除。Kubernetes 最多允许 32 个搜索域。
 
 - `options`：可选的对象列表，其中每个对象可能具有 `name` 属性（必需）和 `value` 属性（可选）。
   此属性中的内容将合并到从指定的 DNS 策略生成的选项。
@@ -523,7 +524,7 @@ The following is an example Pod with custom DNS settings:
 -->
 以下是具有自定义 DNS 设置的 Pod 示例：
 
-{{< codenew file="service/networking/custom-dns.yaml" >}}
+{{% code_sample file="service/networking/custom-dns.yaml" %}}
 
 <!--
 When the Pod above is created, the container `test` gets the following contents
@@ -562,7 +563,7 @@ options ndots:5
 -->
 ## DNS 搜索域列表限制  {#dns-search-domain-list-limits}
 
-{{< feature-state for_k8s_version="1.26" state="beta" >}}
+{{< feature-state for_k8s_version="1.28" state="stable" >}}
 
 <!--
 Kubernetes itself does not limit the DNS Config until the length of the search

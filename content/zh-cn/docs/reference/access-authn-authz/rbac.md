@@ -2,7 +2,7 @@
 title: 使用 RBAC 鉴权
 content_type: concept
 aliases: [/zh-cn/rbac/]
-weight: 70
+weight: 33
 ---
 
 <!--
@@ -13,7 +13,7 @@ reviewers:
 title: Using RBAC Authorization
 content_type: concept
 aliases: [/rbac/]
-weight: 70
+weight: 33
 -->
 
 <!-- overview -->
@@ -56,16 +56,16 @@ kube-apiserver --authorization-mode=Example,RBAC --<其他选项> --<其他选�
 ## API objects {#api-overview}
 
 The RBAC API declares four kinds of Kubernetes object: _Role_, _ClusterRole_,
-_RoleBinding_ and _ClusterRoleBinding_. You can
-[describe objects](/docs/concepts/overview/working-with-objects/kubernetes-objects/#understanding-kubernetes-objects),
-or amend them, using tools such as `kubectl`, just like any other Kubernetes object.
+_RoleBinding_ and _ClusterRoleBinding_. You can describe or amend the RBAC
+{{< glossary_tooltip text="objects" term_id="object" >}}
+using tools such as `kubectl`, just like any other Kubernetes object.
 -->
 ## API 对象  {#api-overview}
 
 RBAC API 声明了四种 Kubernetes 对象：**Role**、**ClusterRole**、**RoleBinding** 和
-**ClusterRoleBinding**。你可以像使用其他 Kubernetes 对象一样，通过类似 `kubectl`
-这类工具[描述对象](/zh-cn/docs/concepts/overview/working-with-objects/kubernetes-objects/#understanding-kubernetes-objects),
-或修补对象。
+**ClusterRoleBinding**。你可以像使用其他 Kubernetes 对象一样，
+通过类似 `kubectl` 这类工具描述或修补 RBAC
+{{< glossary_tooltip text="对象" term_id="object" >}}。
 
 {{< caution >}}
 <!--
@@ -246,7 +246,7 @@ The name of a RoleBinding or ClusterRoleBinding object must be a valid
 ### RoleBinding 和 ClusterRoleBinding   {#rolebinding-and-clusterrolebinding}
 
 角色绑定（Role Binding）是将角色中定义的权限赋予一个或者一组用户。
-它包含若干 **主体**（用户、组或服务账户）的列表和对这些主体所获得的角色的引用。
+它包含若干**主体（Subject）**（用户、组或服务账户）的列表和对这些主体所获得的角色的引用。
 RoleBinding 在指定的名字空间中执行授权，而 ClusterRoleBinding 在集群范围执行授权。
 
 一个 RoleBinding 可以引用同一的名字空间中的任何 Role。
@@ -293,7 +293,7 @@ roleRef:
 ```yaml
 apiVersion: rbac.authorization.k8s.io/v1
 # 此角色绑定允许 "jane" 读取 "default" 名字空间中的 Pod
-# 你需要在该命名空间中有一个名为 “pod-reader” 的 Role
+# 你需要在该名字空间中有一个名为 “pod-reader” 的 Role
 kind: RoleBinding
 metadata:
   name: read-pods
@@ -325,7 +325,7 @@ RoleBinding 所在名字空间的资源。这种引用使得你可以跨整个�
 之后在多个名字空间中复用。
 
 例如，尽管下面的 RoleBinding 引用的是一个 ClusterRole，"dave"（这里的主体，
-区分大小写）只能访问 "development" 名字空间中的 Secrets 对象，因为 RoleBinding
+区分大小写）只能访问 "development" 名字空间中的 Secret 对象，因为 RoleBinding
 所在的名字空间（由其 metadata 决定）是 "development"。
 
 <!--
@@ -352,7 +352,7 @@ roleRef:
 -->
 ```yaml
 apiVersion: rbac.authorization.k8s.io/v1
-# 此角色绑定使得用户 "dave" 能够读取 "development" 名字空间中的 Secrets
+# 此角色绑定使得用户 "dave" 能够读取 "development" 名字空间中的 Secret
 # 你需要一个名为 "secret-reader" 的 ClusterRole
 kind: RoleBinding
 metadata:
@@ -472,7 +472,7 @@ _subresource_, such as the logs for a Pod. A request for a Pod's logs looks like
 在 Kubernetes API 中，大多数资源都是使用对象名称的字符串表示来呈现与访问的。
 例如，对于 Pod 应使用 "pods"。
 RBAC 使用对应 API 端点的 URL 中呈现的名字来引用资源。
-有一些 Kubernetes API 涉及 **子资源（subresource）**，例如 Pod 的日志。
+有一些 Kubernetes API 涉及**子资源（subresource）**，例如 Pod 的日志。
 对 Pod 日志的请求看起来像这样：
 
 ```http
@@ -559,15 +559,15 @@ For example, `kubectl get configmaps --field-selector=metadata.name=my-configmap
 {{< /note >}}
 
 <!--
-Rather than referring to individual `resources`、`apiGroups`, and `verbs`,
-you can use the wildcard `*` symbol to refer to all such objects. 
+Rather than referring to individual `resources`, `apiGroups` and `verbs`,
+you can use the wildcard `*` symbol to refer to all such objects.
 For `nonResourceURLs`, you can use the wildcard `*` as a suffix glob match.
 For `resourceNames`, an empty set means that everything is allowed.
 Here is an example that allows access to perform any current and future action on
 all current and future resources in the `example.com` API group.
 This is similar to the built-in `cluster-admin` role.
 -->
-你可愈使用通配符 `*` 可以批量引用所有的 `resources`、`apiGroups` 和 `verbs` 对象， 无需逐一引用。
+你可以使用通配符 `*` 批量引用所有的 `resources`、`apiGroups` 和 `verbs` 对象，无需逐一引用。
 对于 `nonResourceURLs`，你可以将通配符 `*` 作为后缀实现全局通配，
 对于 `resourceNames`，空集表示没有任何限制。
 下面的示例对 `example.com` API 组中所有当前和未来资源执行所有动作。
@@ -578,7 +578,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   namespace: default
-  name: example.com-superuser  # 此角色仅作示范，请勿使用
+  name: example.com-superuser # 此角色仅作示范，请勿使用
 rules:
 - apiGroups: ["example.com"]
   resources: ["*"]
@@ -598,7 +598,7 @@ workload to function correctly are applied.
 在 resources 和 verbs 条目中使用通配符会为敏感资源授予过多的访问权限。
 例如，如果添加了新的资源类型、新的子资源或新的自定义动词，
 通配符条目会自动授予访问权限，用户可能不希望出现这种情况。
-应该执行[最小特权原则](zh-cn/docs/concepts/security/rbac-good-practices/#least-privilege)，
+应该执行[最小特权原则](/zh-cn/docs/concepts/security/rbac-good-practices/#least-privilege)，
 使用具体的 resources 和 verbs 确保仅赋予工作负载正常运行所需的权限。
 {{< /caution >}}
 
@@ -960,7 +960,7 @@ so that authentication produces usernames in the format you want.
 -->
 ### 对主体的引用   {#referring-to-subjects}
 
-RoleBinding 或者 ClusterRoleBinding 可绑定角色到某 **主体（Subject）** 上。
+RoleBinding 或者 ClusterRoleBinding 可绑定角色到某**主体（Subject）** 上。
 主体可以是组，用户或者{{< glossary_tooltip text="服务账户" term_id="service-account" >}}。
 
 Kubernetes 用字符串来表示用户名。
@@ -1148,7 +1148,7 @@ This allows the cluster to repair accidental modifications, and helps to keep ro
 up-to-date as permissions and subjects change in new Kubernetes releases.
 
 To opt out of this reconciliation, set the `rbac.authorization.kubernetes.io/autoupdate`
-annotation on a default cluster role or rolebinding to `false`.
+annotation on a default cluster role or default cluster RoleBinding to `false`.
 Be aware that missing default permissions and subjects can result in non-functional clusters.
 
 Auto-reconciliation is enabled by default if the RBAC authorizer is active.
@@ -1160,7 +1160,7 @@ Auto-reconciliation is enabled by default if the RBAC authorizer is active.
 这种自动协商机制允许集群去修复一些不小心发生的修改，
 并且有助于保证角色和角色绑定在新的发行版本中有权限或主体变更时仍然保持最新。
 
-如果要禁止此功能，请将默认 ClusterRole 以及 ClusterRoleBinding 的
+如果要禁止此功能，请将默认 ClusterRole 以及默认 ClusterRoleBinding 的
 `rbac.authorization.kubernetes.io/autoupdate` 注解设置成 `false`。
 注意，缺少默认权限和角色绑定主体可能会导致集群无法正常工作。
 
@@ -1169,9 +1169,9 @@ Auto-reconciliation is enabled by default if the RBAC authorizer is active.
 <!--
 ### API discovery roles {#discovery-roles}
 
-Default role bindings authorize unauthenticated and authenticated users to read API information
+Default cluster role bindings authorize unauthenticated and authenticated users to read API information
 that is deemed safe to be publicly accessible (including CustomResourceDefinitions).
-To disable anonymous unauthenticated access, add `--anonymous-auth=false` to
+To disable anonymous unauthenticated access, add `--anonymous-auth=false` flag to
 the API server configuration.
 
 To view the configuration of these roles via `kubectl` run:
@@ -1179,8 +1179,8 @@ To view the configuration of these roles via `kubectl` run:
 ### API 发现角色  {#discovery-roles}
 
 无论是经过身份验证的还是未经过身份验证的用户，
-默认的角色绑定都授权他们读取被认为是可安全地公开访问的 API（包括 CustomResourceDefinitions）。
-如果要禁用匿名的未经过身份验证的用户访问，请在 API 服务器配置中中添加
+默认的集群角色绑定都授权他们读取被认为是可安全地公开访问的 API（包括 CustomResourceDefinitions）。
+如果要禁用匿名的未经过身份验证的用户访问，请在 API 服务器配置中添加
 `--anonymous-auth=false` 的配置选项。
 
 通过运行命令 `kubectl` 可以查看这些角色的配置信息:
@@ -1397,7 +1397,7 @@ the contents of Secrets enables access to ServiceAccount credentials
 in the namespace, which would allow API access as any ServiceAccount
 in the namespace (a form of privilege escalation).
 -->
-此角色不允许查看 Secrets，因为读取 Secret 的内容意味着可以访问名字空间中
+此角色不允许查看 Secret，因为读取 Secret 的内容意味着可以访问名字空间中
 ServiceAccount 的凭据信息，进而允许利用名字空间中任何 ServiceAccount
 的身份访问 API（这是一种特权提升）。
 </td>
@@ -1764,9 +1764,9 @@ You can only create/update a role binding if you already have all the permission
 For example, if `user-1` does not have the ability to list Secrets cluster-wide, they cannot create a ClusterRoleBinding
 to a role that grants that permission. To allow a user to create/update role bindings:
 -->
-### 对角色绑定创建或更新的限制 {#restrictions-on-role-binding-creation-or-update}
+### 对角色绑定创建或更新的限制   {#restrictions-on-role-binding-creation-or-update}
 
-只有你已经具有了所引用的角色中包含的全部权限时，**或者** 你被授权在所引用的角色上执行 `bind`
+只有你已经具有了所引用的角色中包含的全部权限时，**或者**你被授权在所引用的角色上执行 `bind`
 动词时，你才可以创建或更新角色绑定。这里的权限与角色绑定的作用域相同。
 例如，如果用户 `user-1` 没有列举集群范围所有 Secret 的能力，则他不可以创建
 ClusterRoleBinding 引用授予该许可权限的角色。
@@ -2107,7 +2107,7 @@ Examples:
 
 Default RBAC policies grant scoped permissions to control-plane components, nodes,
 and controllers, but grant *no permissions* to service accounts outside the `kube-system` namespace
-(beyond discovery permissions given to all authenticated users).
+(beyond the permissions given by [API discovery roles](#discovery-roles)).
 
 This allows you to grant particular roles to particular ServiceAccounts as needed.
 Fine-grained role bindings provide greater security, but require more effort to administrate.
@@ -2118,7 +2118,7 @@ ServiceAccounts, but are easier to administrate.
 
 默认的 RBAC 策略为控制面组件、节点和控制器授予权限。
 但是不会对 `kube-system` 名字空间之外的服务账户授予权限。
-（除了授予所有已认证用户的发现权限）
+（除了 [API 发现角色](#discovery-roles) 授予的权限）
 
 这使得你可以根据需要向特定 ServiceAccount 授予特定权限。
 细粒度的角色绑定可带来更好的安全性，但需要更多精力管理。
@@ -2303,7 +2303,7 @@ you can create the following ClusterRole:
 
 如果你希望在新集群的聚合角色里保留此访问权限，你可以创建下面的 ClusterRole：
 
-{{< codenew file="access/endpoints-aggregated.yaml" >}}
+{{< code_sample file="access/endpoints-aggregated.yaml" >}}
 
 <!--
 ## Upgrading from ABAC
@@ -2320,13 +2320,13 @@ service accounts.
 <!--
 Default RBAC policies grant scoped permissions to control-plane components, nodes,
 and controllers, but grant *no permissions* to service accounts outside the `kube-system` namespace
-(beyond discovery permissions given to all authenticated users).
+(beyond the permissions given by [API discovery roles](#discovery-roles)).
 
 While far more secure, this can be disruptive to existing workloads expecting to automatically receive API permissions.
 Here are two approaches for managing this transition:
 -->
 默认的 RBAC 策略为控制面组件、节点和控制器等授予有限的权限，但不会为
-`kube-system` 名字空间外的服务账户授权（除了授予所有认证用户的发现权限之外）。
+`kube-system` 名字空间外的服务账户授权（除了 [API 发现角色](#discovery-roles)授予的权限）。
 
 这样做虽然安全得多，但可能会干扰期望自动获得 API 权限的现有工作负载。
 这里有两种方法来完成这种转换:
@@ -2389,7 +2389,7 @@ Any application running in a container receives service account credentials auto
 and could perform any action against the API, including viewing secrets and modifying permissions.
 This is not a recommended policy.
 -->
-下面的策略允许 **所有** 服务帐户充当集群管理员。
+下面的策略允许**所有**服务帐户充当集群管理员。
 容器中运行的所有应用程序都会自动收到服务帐户的凭据，可以对 API 执行任何操作，
 包括查看 Secret 和修改权限。这一策略是不被推荐的。
 

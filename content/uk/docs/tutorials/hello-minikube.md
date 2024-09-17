@@ -3,15 +3,6 @@
 title: Привіт Minikube
 content_type: tutorial
 weight: 5
-menu:
-  main:
-    #title: "Get Started"
-    title: "Початок роботи"
-    weight: 10
-    #post: >
-      #<p>Ready to get your hands dirty? Build a simple Kubernetes cluster that runs "Hello World" for Node.js.</p>
-    post: >
-      <p>Готові попрацювати? Створимо простий Kubernetes кластер для запуску Node.js застосунку "Hello World".</p>
 card: 
   #name: tutorials
   name: навчальні матеріали
@@ -58,9 +49,9 @@ You can also follow this tutorial if you've installed [Minikube locally](/docs/t
 -->
 У цьому навчальному матеріалі ми використовуємо образ контейнера, зібраний із наступних файлів:
 
-{{< codenew language="js" file="minikube/server.js" >}}
+{{% codenew language="js" file="minikube/server.js" %}}
 
-{{< codenew language="conf" file="minikube/Dockerfile" >}}
+{{% codenew language="conf" file="minikube/Dockerfile" %}}
 
 <!--For more information on the `docker build` command, read the [Docker documentation](https://docs.docker.com/engine/reference/commandline/build/).
 -->

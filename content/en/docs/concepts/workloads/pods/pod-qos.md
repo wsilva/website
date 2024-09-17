@@ -7,7 +7,7 @@ weight: 85
 <!-- overview -->
 
 This page introduces _Quality of Service (QoS) classes_ in Kubernetes, and explains
-how Kubernetes assigns a QoS class to each Pods as a consequence of the resource
+how Kubernetes assigns a QoS class to each Pod as a consequence of the resource
 constraints that you specify for the containers in that Pod. Kubernetes relies on this
 classification to make decisions about which Pods to evict when there are not enough
 available resources on a Node.
@@ -87,7 +87,7 @@ Containers in a Pod can request other resources (not CPU or memory) and still be
 
 ## Memory QoS with cgroup v2
 
-{{< feature-state for_k8s_version="v1.22" state="alpha" >}}
+{{< feature-state feature_gate_name="MemoryQoS" >}}
 
 Memory QoS uses the memory controller of cgroup v2 to guarantee memory resources in Kubernetes.
 Memory requests and limits of containers in pod are used to set specific interfaces `memory.min`

@@ -1,10 +1,16 @@
 ---
-title: 租约
+title: 租约（Lease）
+api_metadata:
+- apiVersion: "coordination.k8s.io/v1"
+  kind: "Lease"
 content_type: concept
 weight: 30
 ---
 <!--
 title: Leases
+api_metadata:
+- apiVersion: "coordination.k8s.io/v1"
+  kind: "Lease"
 content_type: concept
 weight: 30
 -->
@@ -35,7 +41,7 @@ namespace. Under the hood, every kubelet heartbeat is an **update** request to t
 the `spec.renewTime` field for the Lease. The Kubernetes control plane uses the time stamp of this field
 to determine the availability of this `Node`.
 
-See [Node Lease objects](/docs/concepts/architecture/nodes/#heartbeats) for more details.
+See [Node Lease objects](/docs/concepts/architecture/nodes/#node-heartbeats) for more details.
 -->
 ## 节点心跳  {#node-heart-beats}
 
@@ -44,7 +50,7 @@ Kubernetes 使用 Lease API 将 kubelet 节点心跳传递到 Kubernetes API 服
 在此基础上，每个 kubelet 心跳都是对该 `Lease` 对象的 **update** 请求，更新该 Lease 的 `spec.renewTime` 字段。
 Kubernetes 控制平面使用此字段的时间戳来确定此 `Node` 的可用性。
 
-更多细节请参阅 [Node Lease 对象](/zh-cn/docs/concepts/architecture/nodes/#heartbeats)。
+更多细节请参阅 [Node Lease 对象](/zh-cn/docs/concepts/architecture/nodes/#node-heartbeats)。
 
 <!--
 ## Leader election
@@ -61,11 +67,19 @@ Kubernetes 也使用 Lease 确保在任何给定时间某个组件只有一个�
 这些组件只应有一个实例激活运行，而其他实例待机。
 
 <!--
+Read [coordinated leader election](/docs/concepts/cluster-administration/coordinated-leader-election)
+to learn about how Kubernetes builds on the Lease API to select which component instance
+acts as leader.
+-->
+参阅[协调领导者选举](/zh-cn/docs/concepts/cluster-administration/coordinated-leader-election)以了解
+Kubernetes 如何基于 Lease API 来选择哪个组件实例充当领导者。
+
+<!--
 ## API server identity
 -->
 ## API 服务器身份   {#api-server-identity}
 
-{{< feature-state for_k8s_version="v1.26" state="beta" >}}
+{{< feature-state feature_gate_name="APIServerIdentity" >}}
 
 <!--
 Starting in Kubernetes v1.26, each `kube-apiserver` uses the Lease API to publish its identity to the
@@ -75,24 +89,24 @@ Existence of kube-apiserver leases enables future capabilities that may require 
 each kube-apiserver.
 
 You can inspect Leases owned by each kube-apiserver by checking for lease objects in the `kube-system` namespace
-with the name `kube-apiserver-<sha256-hash>`. Alternatively you can use the label selector `k8s.io/component=kube-apiserver`:
+with the name `kube-apiserver-<sha256-hash>`. Alternatively you can use the label selector `apiserver.kubernetes.io/identity=kube-apiserver`:
 -->
 从 Kubernetes v1.26 开始，每个 `kube-apiserver` 都使用 Lease API 将其身份发布到系统中的其他位置。
 虽然它本身并不是特别有用，但为客户端提供了一种机制来发现有多少个 `kube-apiserver` 实例正在操作
 Kubernetes 控制平面。kube-apiserver 租约的存在使得未来可以在各个 kube-apiserver 之间协调新的能力。
 
 你可以检查 `kube-system` 名字空间中名为 `kube-apiserver-<sha256-hash>` 的 Lease 对象来查看每个
-kube-apiserver 拥有的租约。你还可以使用标签选择算符 `k8s.io/component=kube-apiserver`：
+kube-apiserver 拥有的租约。你还可以使用标签选择算符 `apiserver.kubernetes.io/identity=kube-apiserver`：
 
 ```shell
-kubectl -n kube-system get lease -l k8s.io/component=kube-apiserver
+kubectl -n kube-system get lease -l apiserver.kubernetes.io/identity=kube-apiserver
 ```
 
 ```
 NAME                                        HOLDER                                                                           AGE
-kube-apiserver-c4vwjftbvpc5os2vvzle4qg27a   kube-apiserver-c4vwjftbvpc5os2vvzle4qg27a_9cbf54e5-1136-44bd-8f9a-1dcd15c346b4   5m33s
-kube-apiserver-dz2dqprdpsgnm756t5rnov7yka   kube-apiserver-dz2dqprdpsgnm756t5rnov7yka_84f2a85d-37c1-4b14-b6b9-603e62e4896f   4m23s
-kube-apiserver-fyloo45sdenffw2ugwaz3likua   kube-apiserver-fyloo45sdenffw2ugwaz3likua_c5ffa286-8a9a-45d4-91e7-61118ed58d2e   4m43s
+apiserver-07a5ea9b9b072c4a5f3d1c3702        apiserver-07a5ea9b9b072c4a5f3d1c3702_0c8914f7-0f35-440e-8676-7844977d3a05        5m33s
+apiserver-7be9e061c59d368b3ddaf1376e        apiserver-7be9e061c59d368b3ddaf1376e_84f2a85d-37c1-4b14-b6b9-603e62e4896f        4m23s
+apiserver-1dfef752bcb36637d2763d1868        apiserver-1dfef752bcb36637d2763d1868_c5ffa286-8a9a-45d4-91e7-61118ed58d2e        4m43s
 ```
 
 <!--
@@ -107,25 +121,25 @@ hostname used by kube-apisever by checking the value of the `kubernetes.io/hostn
 你可以通过检查 `kubernetes.io/hostname` 标签的值来查看 kube-apisever 所使用的主机名：
 
 ```shell
-kubectl -n kube-system get lease kube-apiserver-c4vwjftbvpc5os2vvzle4qg27a -o yaml
+kubectl -n kube-system get lease apiserver-07a5ea9b9b072c4a5f3d1c3702 -o yaml
 ```
 
 ```yaml
 apiVersion: coordination.k8s.io/v1
 kind: Lease
 metadata:
-  creationTimestamp: "2022-11-30T15:37:15Z"
+  creationTimestamp: "2023-07-02T13:16:48Z"
   labels:
-    k8s.io/component: kube-apiserver
-    kubernetes.io/hostname: kind-control-plane
-  name: kube-apiserver-c4vwjftbvpc5os2vvzle4qg27a
+    apiserver.kubernetes.io/identity: kube-apiserver
+    kubernetes.io/hostname: master-1
+  name: apiserver-07a5ea9b9b072c4a5f3d1c3702
   namespace: kube-system
-  resourceVersion: "18171"
-  uid: d6c68901-4ec5-4385-b1ef-2d783738da6c
+  resourceVersion: "334899"
+  uid: 90870ab5-1ba9-4523-b215-e4d4e662acb1
 spec:
-  holderIdentity: kube-apiserver-c4vwjftbvpc5os2vvzle4qg27a_9cbf54e5-1136-44bd-8f9a-1dcd15c346b4
+  holderIdentity: apiserver-07a5ea9b9b072c4a5f3d1c3702_0c8914f7-0f35-440e-8676-7844977d3a05
   leaseDurationSeconds: 3600
-  renewTime: "2022-11-30T18:04:27.912073Z"
+  renewTime: "2023-07-04T21:58:48.065888Z"
 ```
 
 <!--

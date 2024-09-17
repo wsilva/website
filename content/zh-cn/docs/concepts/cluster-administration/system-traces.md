@@ -37,8 +37,14 @@ Kubernetes 组件基于 gRPC 导出器的
 
 <!-- 
 ## Trace Collection
+
+Kubernetes components have built-in gRPC exporters for OTLP to export traces, either with an OpenTelemetry Collector, 
+or without an OpenTelemetry Collector.
 -->
 ## 追踪信息的收集 {#trace-collection}
+
+Kubernetes 组件具有内置的 gRPC 导出器，供 OTLP 导出追踪信息，可以使用 OpenTelemetry Collector，
+也可以不使用 OpenTelemetry Collector。
 
 <!-- 
 For a complete guide to collecting traces and using the collector, see
@@ -92,6 +98,30 @@ service:
       receivers: [otlp]
       exporters: [logging]
 ```
+
+<!--
+To directly emit traces to a backend without utilizing a collector, 
+specify the endpoint field in the Kubernetes tracing configuration file with the desired trace backend address. 
+This method negates the need for a collector and simplifies the overall structure.
+-->
+要在不使用收集器的情况下直接将追踪信息发送到后端，请在 Kubernetes
+追踪配置文件中指定端点字段以及所需的追踪后端地址。
+该方法不需要收集器并简化了整体结构。
+
+<!--
+For trace backend header configuration, including authentication details, environment variables can be used with `OTEL_EXPORTER_OTLP_HEADERS`, 
+see [OTLP Exporter Configuration](https://opentelemetry.io/docs/languages/sdk-configuration/otlp-exporter/).
+-->
+对于追踪后端标头配置，包括身份验证详细信息，环境变量可以与 `OTEL_EXPORTER_OTLP_HEADERS`
+一起使用，请参阅 [OTLP 导出器配置](https://opentelemetry.io/docs/languages/sdk-configuration/otlp-exporter/)。
+
+<!--
+Additionally, for trace resource attribute configuration such as Kubernetes cluster name, namespace, Pod name, etc., 
+environment variables can also be used with `OTEL_RESOURCE_ATTRIBUTES`, see [OTLP Kubernetes Resource](https://opentelemetry.io/docs/specs/semconv/resource/k8s/).
+-->
+另外，对于 Kubernetes 集群名称、命名空间、Pod 名称等追踪资源属性配置，
+环境变量也可以与 `OTEL_RESOURCE_ATTRIBUTES` 配合使用，请参见
+[OTLP Kubernetes 资源](https://opentelemetry.io/docs/specs/semconv/resource/k8s/)。
 
 <!-- 
 ## Component traces
@@ -156,7 +186,7 @@ For more information about the `TracingConfiguration` struct, see
 -->
 ### kubelet 追踪   {#kubelet-traces}
 
-{{< feature-state for_k8s_version="v1.27" state="beta" >}}
+{{< feature-state feature_gate_name="KubeletTracing" >}}
 
 <!--
 The kubelet CRI interface and authenticated http servers are instrumented to generate
@@ -215,12 +245,19 @@ span will be sent to the exporter.
 <!--
 The kubelet in Kubernetes v{{< skew currentVersion >}} collects spans from
 the garbage collection, pod synchronization routine as well as every gRPC
-method. Connected container runtimes like CRI-O and containerd can link the
-traces to their exported spans to provide additional context of information.
+method. The kubelet propagates trace context with gRPC requests so that
+container runtimes with trace instrumentation, such as CRI-O and containerd,
+can associate their exported spans with the trace context from the kubelet.
+The resulting traces will have parent-child links between kubelet and
+container runtime spans, providing helpful context when debugging node
+issues.
 -->
-Kubernetes v{{< skew currentVersion >}} 中的 kubelet 从垃圾回收、Pod
-同步例程以及每个 gRPC 方法中收集 span。CRI-O 和 containerd
-这类关联的容器运行时可以将链路链接到其导出的 span，以提供更多上下文信息。
+Kubernetes v{{< skew currentVersion >}} 中的 kubelet 收集与垃圾回收、Pod
+同步例程以及每个 gRPC 方法相关的 Span。
+kubelet 借助 gRPC 来传播跟踪上下文，以便 CRI-O 和 containerd
+这类带有跟踪插桩的容器运行时可以在其导出的 Span 与 kubelet
+所提供的跟踪上下文之间建立关联。所得到的跟踪数据会包含 kubelet
+与容器运行时 Span 之间的父子链接关系，从而为调试节点问题提供有用的上下文信息。
 
 <!--
 Please note that exporting spans always comes with a small performance overhead
@@ -253,5 +290,7 @@ there are no guarantees of backwards compatibility for tracing instrumentation.
 
 <!-- 
 * Read about [Getting Started with the OpenTelemetry Collector](https://opentelemetry.io/docs/collector/getting-started/)
+* Read about [OTLP Exporter Configuration](https://opentelemetry.io/docs/languages/sdk-configuration/otlp-exporter/)
 -->
 * 阅读 [Getting Started with the OpenTelemetry Collector](https://opentelemetry.io/docs/collector/getting-started/)
+* 了解 [OTLP 导出器配置](https://opentelemetry.io/docs/languages/sdk-configuration/otlp-exporter/)

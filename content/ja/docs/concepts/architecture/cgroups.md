@@ -32,7 +32,7 @@ cgroup v2はリソース管理機能を強化した統合制御システムを�
   - ページキャッシュの書き戻しといった、非即時のリソース変更
 
 Kubernetesのいくつかの機能では、強化されたリソース管理と隔離のためにcgroup v2のみを使用しています。
-例えば、[MemoryQoS](/blog/2021/11/26/qos-memory-resources/)機能はメモリーQoSを改善し、cgroup v2の基本的な機能に依存しています。
+例えば、[MemoryQoS](/docs/concepts/workloads/pods/pod-qos/#memory-qos-with-cgroup-v2)機能はメモリーQoSを改善し、cgroup v2の基本的な機能に依存しています。
 
 ## cgroup v2を使う {#using-cgroupv2}
 
@@ -84,7 +84,11 @@ cgroup v2はcgroup v1とは違うAPIを利用しているため、cgroupファ�
 * サードパーティーの監視またはセキュリティエージェントはcgroupファイルシステムに依存していることがあります。
  エージェントをcgroup v2をサポートしているバージョンに更新してください。
 * Podやコンテナを監視するために[cAdvisor](https://github.com/google/cadvisor)をスタンドアローンのDaemonSetとして起動している場合、v0.43.0以上に更新してください。
-* JDKを利用している場合、[cgroup v2を完全にサポートしている](https://bugs.openjdk.org/browse/JDK-8230305)JDK 11.0.16以降、またはJDK15以降を利用することが望ましいです。
+* Javaアプリケーションをデプロイする場合は、完全にcgroup v2をサポートしているバージョンを利用してください：
+    * [OpenJDK / HotSpot](https://bugs.openjdk.org/browse/JDK-8230305): jdk8u372、11.0.16、15以降
+    * [IBM Semeru Runtimes](https://www.eclipse.org/openj9/docs/version0.33/#control-groups-v2-support): jdk8u345-b01、11.0.16.0、17.0.4.0、18.0.2.0以降
+    * [IBM Java](https://www.ibm.com/docs/en/sdk-java-technology/8?topic=new-service-refresh-7#whatsnew_sr7__fp15): 8.0.7.15以降
+* [uber-go/automaxprocs](https://github.com/uber-go/automaxprocs)パッケージを利用している場合は、利用するバージョンがv1.5.1以上であることを確認してください。
 
 ## Linux Nodeのcgroupバージョンを特定する {#check-cgroup-version}
 

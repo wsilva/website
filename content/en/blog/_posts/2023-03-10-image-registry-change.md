@@ -3,13 +3,19 @@ layout: blog
 title: "k8s.gcr.io Redirect to registry.k8s.io - What You Need to Know"
 date: 2023-03-10T17:00:00.000Z
 slug: image-registry-redirect
+author: >
+   Bob Killen (Google),
+   Davanum Srinivas (AWS),
+   Chris Short (AWS),
+   Frederico Muñoz (SAS Institute),
+   Tim Bannister (The Scale Factory),
+   Ricky Sadowski (AWS),
+   Grace Nguyen (Expo),
+   Mahamed Ali (Rackspace Technology),
+   Mars Toktonaliev (independent),
+   Laura Santamaria (Dell),
+   Kat Cosgrove (Dell)
 ---
-
-**Authors**: Bob Killen (Google), Davanum Srinivas (AWS), Chris Short (AWS), Frederico Muñoz (SAS
-Institute), Tim Bannister (The Scale Factory), Ricky Sadowski (AWS), Grace Nguyen (Expo), Mahamed
-Ali (Rackspace Technology), Mars Toktonaliev (independent), Laura Santamaria (Dell), Kat Cosgrove
-(Dell)
-
 
 On Monday, March 20th, the k8s.gcr.io registry [will be redirected to the community owned
 registry](https://kubernetes.io/blog/2022/11/28/registry-k8s-io-faster-cheaper-ga/),
@@ -123,8 +129,8 @@ repository](https://github.com/aws/aws-eks-best-practices/tree/master/policies/k
 that will block them from being pulled. You can use these third-party policies with any Kubernetes
 cluster.
 
-**Option 5**: As a **LAST** possible option, you can use a [Mutating
-Admission Webhook](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/#what-are-admission-webhooks)
+**Option 5**: As a **LAST** possible option, you can use a
+[Mutating Admission Webhook](/docs/reference/access-authn-authz/extensible-admission-controllers/#what-are-admission-webhooks)
 to change the image address dynamically. This should only be
 considered a stopgap till your manifests have been updated. You can
 find a (third party) Mutating Webhook and Kyverno policy in

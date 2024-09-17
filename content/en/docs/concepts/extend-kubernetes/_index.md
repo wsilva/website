@@ -157,7 +157,7 @@ several types of extensions.
 
 <!-- image source for flowchart: https://docs.google.com/drawings/d/1sdviU6lDz4BpnzJNHfNpQrqI9F19QZ07KnhnxVrp2yg/edit -->
 
-{{< figure src="/docs/concepts/extend-kubernetes/flowchart.png"
+{{< figure src="/docs/concepts/extend-kubernetes/flowchart.svg"
     alt="Flowchart with questions about use cases and guidance for implementers. Green circles indicate yes; red circles indicate no."
     class="diagram-large" caption="Flowchart guide to select an extension approach" >}}
 
@@ -264,7 +264,7 @@ a way to extend Kubernetes with supports for new kinds of volumes. The volumes c
 durable external storage, or provide ephemeral storage, or they might offer a read-only interface
 to information using a filesystem paradigm.
 
-Kubernetes also includes support for [FlexVolume](/docs/concepts/storage/volumes/#flexvolume-deprecated) plugins,
+Kubernetes also includes support for [FlexVolume](/docs/concepts/storage/volumes/#flexvolume) plugins,
 which are deprecated since Kubernetes v1.23 (in favour of CSI).
 
 FlexVolume plugins allow users to mount volume types that aren't natively supported by Kubernetes. When
@@ -282,6 +282,20 @@ and to support other aspects of the Kubernetes network model.
 
 [Network Plugins](/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/)
 allow Kubernetes to work with different networking topologies and technologies.
+
+### Kubelet image credential provider plugins
+
+{{< feature-state for_k8s_version="v1.26" state="stable" >}}
+Kubelet image credential providers are plugins for the kubelet to dynamically retrieve image registry
+credentials. The credentials are then used when pulling images from container image registries that
+match the configuration.
+
+The plugins can communicate with external services or use local files to obtain credentials. This way,
+the kubelet does not need to have static credentials for each registry, and can support various
+authentication methods and protocols.
+
+For plugin configuration details, see
+[Configure a kubelet image credential provider](/docs/tasks/administer-cluster/kubelet-credential-provider/).
 
 ## Scheduling extensions
 

@@ -3,9 +3,9 @@ layout: blog
 title: "Forensic container checkpointing in Kubernetes"
 date: 2022-12-05
 slug: forensic-container-checkpointing-alpha
+author: >
+  Adrian Reber (Red Hat)
 ---
-
-**Authors:** Adrian Reber (Red Hat)
 
 Forensic container checkpointing is based on [Checkpoint/Restore In
 Userspace](https://criu.org/) (CRIU) and allows the creation of stateful copies
@@ -69,7 +69,7 @@ to be considered as an alpha level feature in CRI-O and Kubernetes and the
 security implications are still under consideration.
 
 Once containers and pods are running it is possible to create a checkpoint.
-[Checkpointing](https://kubernetes.io/docs/reference/node/kubelet-checkpoint-api/)
+[Checkpointing](/docs/reference/node/kubelet-checkpoint-api/)
 is currently only exposed on the **kubelet** level. To checkpoint a container,
 you can run `curl` on the node where that container is running, and trigger a
 checkpoint:

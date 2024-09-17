@@ -60,7 +60,7 @@ spec:
   # Configure a topology spread constraint
   topologySpreadConstraints:
     - maxSkew: <integer>
-      minDomains: <integer> # optional; beta since v1.25
+      minDomains: <integer> # optional
       topologyKey: <string>
       whenUnsatisfiable: <string>
       labelSelector: <object>
@@ -71,7 +71,7 @@ spec:
 ```
 
 You can read more about this field by running `kubectl explain Pod.spec.topologySpreadConstraints` or
-refer to [scheduling](/docs/reference/kubernetes-api/workload-resources/pod-v1/#scheduling) section of the API reference for Pod.
+refer to the [scheduling](/docs/reference/kubernetes-api/workload-resources/pod-v1/#scheduling) section of the API reference for Pod.
 
 ### Spread constraint definition
 
@@ -96,9 +96,12 @@ your cluster. Those fields are:
   A domain is a particular instance of a topology. An eligible domain is a domain whose
   nodes match the node selector.
 
+  <!-- OK to remove this note once v1.29 Kubernetes is out of support -->
   {{< note >}}
-  The `minDomains` field is a beta field and disabled by default in 1.25. You can enable it by enabling the
-  `MinDomainsInPodTopologySpread` [feature gate](/docs/reference/command-line-tools-reference/feature-gates/).
+  Before Kubernetes v1.30, the `minDomains` field was only available if the
+  `MinDomainsInPodTopologySpread` [feature gate](/docs/reference/command-line-tools-reference/feature-gates/)
+  was enabled (default since v1.28). In older Kubernetes clusters it might be explicitly
+  disabled or the field might not be available.
   {{< /note >}}
 
   - The value of `minDomains` must be greater than 0, when specified.
@@ -251,7 +254,7 @@ follows the API definition of the field; however, the behavior is more likely to
 confusing and troubleshooting is less straightforward.
 
 You need a mechanism to ensure that all the nodes in a topology domain (such as a
-cloud provider region) are labelled consistently.
+cloud provider region) are labeled consistently.
 To avoid you needing to manually label nodes, most clusters automatically
 populate well-known labels such as `kubernetes.io/hostname`. Check whether
 your cluster supports this.
@@ -260,7 +263,7 @@ your cluster supports this.
 
 ### Example: one topology spread constraint {#example-one-topologyspreadconstraint}
 
-Suppose you have a 4-node cluster where 3 Pods labelled `foo: bar` are located in
+Suppose you have a 4-node cluster where 3 Pods labeled `foo: bar` are located in
 node1, node2 and node3 respectively:
 
 {{<mermaid>}}
@@ -284,10 +287,10 @@ graph BT
 If you want an incoming Pod to be evenly spread with existing Pods across zones, you
 can use a manifest similar to:
 
-{{< codenew file="pods/topology-spread-constraints/one-constraint.yaml" >}}
+{{% code_sample file="pods/topology-spread-constraints/one-constraint.yaml" %}}
 
 From that manifest, `topologyKey: zone` implies the even distribution will only be applied
-to nodes that are labelled `zone: <any value>` (nodes that don't have a `zone` label
+to nodes that are labeled `zone: <any value>` (nodes that don't have a `zone` label
 are skipped). The field `whenUnsatisfiable: DoNotSchedule` tells the scheduler to let the
 incoming Pod stay pending if the scheduler can't find a way to satisfy the constraint.
 
@@ -377,7 +380,7 @@ graph BT
 You can combine two topology spread constraints to control the spread of Pods both
 by node and by zone:
 
-{{< codenew file="pods/topology-spread-constraints/two-constraints.yaml" >}}
+{{% code_sample file="pods/topology-spread-constraints/two-constraints.yaml" %}}
 
 In this case, to match the first constraint, the incoming Pod can only be placed onto
 nodes in zone `B`; while in terms of the second constraint, the incoming Pod can only be
@@ -466,7 +469,7 @@ and you know that zone `C` must be excluded. In this case, you can compose a man
 as below, so that Pod `mypod` will be placed into zone `B` instead of zone `C`.
 Similarly, Kubernetes also respects `spec.nodeSelector`.
 
-{{< codenew file="pods/topology-spread-constraints/one-constraint-with-nodeaffinity.yaml" >}}
+{{% code_sample file="pods/topology-spread-constraints/one-constraint-with-nodeaffinity.yaml" %}}
 
 ## Implicit conventions
 
@@ -478,7 +481,8 @@ There are some implicit conventions worth noting here:
   present. This implies that:
 
   1. any Pods located on those bypassed nodes do not impact `maxSkew` calculation - in the
-     above example, suppose the node `node1` does not have a label "zone", then the 2 Pods will
+     above [example](#example-conflicting-topologyspreadconstraints), suppose the node `node1`
+     does not have a label "zone", then the 2 Pods will
      be disregarded, hence the incoming Pod will be scheduled into zone `A`.
   2. the incoming Pod has no chances to be scheduled onto this kind of nodes -
      in the above example, suppose a node `node5` has the **mistyped** label `zone-typo: zoneC`
@@ -490,7 +494,7 @@ There are some implicit conventions worth noting here:
   above example, if you remove the incoming Pod's labels, it can still be placed onto
   nodes in zone `B`, since the constraints are still satisfied. However, after that
   placement, the degree of imbalance of the cluster remains unchanged - it's still zone `A`
-  having 2 Pods labelled as `foo: bar`, and zone `B` having 1 Pod labelled as
+  having 2 Pods labeled as `foo: bar`, and zone `B` having 1 Pod labeled as
   `foo: bar`. If this is not what you expect, update the workload's
   `topologySpreadConstraints[*].labelSelector` to match the labels in the pod template.
 
@@ -525,13 +529,6 @@ profiles:
               whenUnsatisfiable: ScheduleAnyway
           defaultingType: List
 ```
-
-{{< note >}}
-The [`SelectorSpread` plugin](/docs/reference/scheduling/config/#scheduling-plugins)
-is disabled by default. The Kubernetes project recommends using `PodTopologySpread`
-to achieve similar behavior.
-{{< /note >}}
-
 ### Built-in default constraints {#internal-default-constraints}
 
 {{< feature-state for_k8s_version="v1.24" state="stable" >}}
@@ -621,7 +618,7 @@ section of the enhancement proposal about Pod topology spread constraints.
   because, in this case, those topology domains won't be considered until there is
   at least one node in them.
 
-  You can work around this by using an cluster autoscaling tool that is aware of
+  You can work around this by using a cluster autoscaling tool that is aware of
   Pod topology spread constraints and is also aware of the overall set of topology
   domains.
 

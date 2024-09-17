@@ -1,8 +1,21 @@
 ---
 title: 限制范围
+api_metadata:
+- apiVersion: "v1"
+  kind: "LimitRange"
 content_type: concept
 weight: 10
 ---
+<!--
+reviewers:
+- nelvadas
+title: Limit Ranges
+api_metadata:
+- apiVersion: "v1"
+  kind: "LimitRange"
+content_type: concept
+weight: 10
+-->
 
 <!-- overview -->
 
@@ -78,7 +91,7 @@ LimitRange 的名称必须是合法的
 
 - 管理员在一个命名空间内创建一个 `LimitRange` 对象。
 - 用户在此命名空间内创建（或尝试创建） Pod 和 PersistentVolumeClaim 等对象。
-- 首先，`LimitRanger` 准入控制器对所有没有设置计算资源需求的所有 Pod（及其容器）设置默认请求值与限制值。
+- 首先，`LimitRange` 准入控制器对所有没有设置计算资源需求的所有 Pod（及其容器）设置默认请求值与限制值。
 - 其次，`LimitRange` 跟踪其使用量以保证没有超出命名空间中存在的任意 `LimitRange` 所定义的最小、最大资源使用量以及使用量比值。
 - 若尝试创建或更新的对象（Pod 和 PersistentVolumeClaim）违反了 `LimitRange` 的约束，
   向 API 服务器的请求会失败，并返回 HTTP 状态码 `403 Forbidden` 以及描述哪一项约束被违反的消息。
@@ -103,14 +116,14 @@ For example, you define a `LimitRange` with this manifest:
 
 例如，你使用如下清单定义一个 `LimitRange`：
 
-{{< codenew file="concepts/policy/limit-range/problematic-limit-range.yaml" >}}
+{{% code_sample file="concepts/policy/limit-range/problematic-limit-range.yaml" %}}
 
 <!--
 along with a Pod that declares a CPU resource request of `700m`, but not a limit:
 -->
 以及一个声明 CPU 资源请求为 `700m` 但未声明限制值的 Pod：
 
-{{< codenew file="concepts/policy/limit-range/example-conflict-with-limitrange-cpu.yaml" >}}
+{{% code_sample file="concepts/policy/limit-range/example-conflict-with-limitrange-cpu.yaml" %}}
 
 <!--
 then that Pod will not be scheduled, failing with an error similar to:
@@ -126,7 +139,7 @@ If you set both `request` and `limit`, then that new Pod will be scheduled succe
 -->
 如果你同时设置了 `request` 和 `limit`，那么即使使用相同的 `LimitRange`，新 Pod 也会被成功调度：
 
-{{< codenew file="concepts/policy/limit-range/example-no-conflict-with-limitrange-cpu.yaml" >}}
+{{% code_sample file="concepts/policy/limit-range/example-no-conflict-with-limitrange-cpu.yaml" %}}
 
 <!--
 ## Example resource constraints

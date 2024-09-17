@@ -3,9 +3,9 @@ layout: blog
 title: "Kubernetes v1.27: Chill Vibes"
 date: 2023-04-11
 slug: kubernetes-v1-27-release
+author: >
+   [Kubernetes v1.27 Release Team](https://github.com/kubernetes/sig-release/blob/master/releases/release-1.27/release-team.md)
 ---
-
-**Authors**: [Kubernetes v1.27 Release Team](https://github.com/kubernetes/sig-release/blob/master/releases/release-1.27/release-team.md)
 
 Announcing the release of Kubernetes v1.27, the first release of 2023!
 
@@ -177,7 +177,7 @@ The complete details of the Kubernetes v1.27 release are available in our [relea
 
 ## Availability
 
-Kubernetes v1.27 is available for download on [GitHub](https://github.com/kubernetes/kubernetes/releases/tag/v1.27.0). To get started with Kubernetes, you can run local Kubernetes clusters using [minikube](https://minikube.sigs.k8s.io/docs/), [kind](https://kind.sigs.k8s.io/), etc. You can also easily install v1.27 using [kubeadm](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/).
+Kubernetes v1.27 is available for download on [GitHub](https://github.com/kubernetes/kubernetes/releases/tag/v1.27.0). To get started with Kubernetes, you can run local Kubernetes clusters using [minikube](https://minikube.sigs.k8s.io/docs/), [kind](https://kind.sigs.k8s.io/), etc. You can also easily install v1.27 using [kubeadm](/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/).
  
 ## Release team
 

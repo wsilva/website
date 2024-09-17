@@ -50,6 +50,12 @@ new kinds of resource that represent metric readings.
 To learn how to deploy the Metrics Server, see the
 [metrics-server documentation](https://github.com/kubernetes-sigs/metrics-server#deployment).
 
+If you are running {{< glossary_tooltip term_id="minikube" >}}, run the following command to enable metrics-server:
+
+```shell
+minikube addons enable metrics-server
+```
+
 <!-- steps -->
 
 ## Run and expose php-apache server
@@ -58,7 +64,7 @@ To demonstrate a HorizontalPodAutoscaler, you will first start a Deployment that
 `hpa-example` image, and expose it as a {{< glossary_tooltip term_id="service">}}
 using the following manifest:
 
-{{< codenew file="application/php-apache.yaml" >}}
+{{% code_sample file="application/php-apache.yaml" %}}
 
 To do so, run the following command:
 
@@ -73,9 +79,9 @@ service/php-apache created
 
 ## Create the HorizontalPodAutoscaler {#create-horizontal-pod-autoscaler}
 
-Now that the server is running, create the autoscaler using `kubectl`. There is
+Now that the server is running, create the autoscaler using `kubectl`. The
 [`kubectl autoscale`](/docs/reference/generated/kubectl/kubectl-commands#autoscale) subcommand,
-part of `kubectl`, that helps you do this.
+part of `kubectl`, helps you do this.
 
 You will shortly run a command that creates a HorizontalPodAutoscaler that maintains
 between 1 and 10 replicas of the Pods controlled by the php-apache Deployment that
@@ -257,12 +263,22 @@ status:
 Notice that the `targetCPUUtilizationPercentage` field has been replaced with an array called `metrics`.
 The CPU utilization metric is a *resource metric*, since it is represented as a percentage of a resource
 specified on pod containers.  Notice that you can specify other resource metrics besides CPU.  By default,
-the only other supported resource metric is memory.  These resources do not change names from cluster
+the only other supported resource metric is `memory`.  These resources do not change names from cluster
 to cluster, and should always be available, as long as the `metrics.k8s.io` API is available.
 
 You can also specify resource metrics in terms of direct values, instead of as percentages of the
 requested value, by using a `target.type` of `AverageValue` instead of `Utilization`, and
 setting the corresponding `target.averageValue` field instead of the `target.averageUtilization`.
+
+```
+  metrics:
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: AverageValue
+        averageValue: 500Mi
+```
 
 There are two other types of metrics, both of which are considered *custom metrics*: pod metrics and
 object metrics.  These metrics may have names which are cluster specific, and require a more
@@ -498,7 +514,7 @@ between `1` and `1500m`, or `1` and `1.5` when written in decimal notation.
 Instead of using `kubectl autoscale` command to create a HorizontalPodAutoscaler imperatively we
 can use the following manifest to create it declaratively:
 
-{{< codenew file="application/hpa/php-apache.yaml" >}}
+{{% code_sample file="application/hpa/php-apache.yaml" %}}
 
 Then, create the autoscaler by executing the following command:
 

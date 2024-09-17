@@ -4,9 +4,9 @@ title: "PodSecurityPolicy: The Historical Context"
 date: 2022-08-23T15:00:00-0800
 slug: podsecuritypolicy-the-historical-context
 evergreen: true
+author: >
+  Mahé Tardy (Quarkslab)
 ---
-
-**Author:** Mahé Tardy (Quarkslab)
 
 The PodSecurityPolicy (PSP) admission controller has been removed, as of
 Kubernetes v1.25. Its deprecation was announced and detailed in the blog post
@@ -47,7 +47,7 @@ API.
 Kubernetes 1.0 was released on 10 July 2015 without any mechanism to restrict the
 security context and sensitive options of workloads, other than an alpha-quality
 SecurityContextDeny admission plugin (then known as `scdeny`).
-The [SecurityContextDeny plugin](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#securitycontextdeny)
+The [SecurityContextDeny plugin](/docs/reference/access-authn-authz/admission-controllers/#securitycontextdeny)
 is still in Kubernetes today (as an alpha feature) and creates an admission controller that
 prevents the usage of some fields in the security context.
 

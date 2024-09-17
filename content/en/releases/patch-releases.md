@@ -76,12 +76,7 @@ Timelines may vary with the severity of bug fixes, but for easier planning we
 will target the following monthly release points. Unplanned, critical
 releases may also occur in between these.
 
-| Monthly Patch Release | Cherry Pick Deadline | Target date |
-| --------------------- | -------------------- | ----------- |
-| May 2023              | 2023-05-12           | 2023-05-17  |
-| June 2023             | 2023-06-09           | 2023-06-14  |
-| July 2023             | 2023-07-07           | 2023-07-12  |
-| August 2023           | 2023-08-04           | 2023-08-09  |
+{{< upcoming-releases >}}
 
 ## Detailed Release History for Active Branches
 
